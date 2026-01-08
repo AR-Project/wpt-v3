@@ -10,8 +10,9 @@
     "typescript": "^5"
   },
   "scripts": {
-    "api": "cd ./packages/backend && bun dev",
-    "frontend": "cd ./packages/frontend && bun dev",
+    "api": "cd ./packages/backend && bun run dev",
+    "api:test": "cd ./packages/backend && bun run test",
+    "frontend": "cd ./packages/frontend && bun run dev",
     "dev": "bun-tasks api ::: frontend"
   },
   "dependencies": {
