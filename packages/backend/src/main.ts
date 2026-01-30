@@ -23,7 +23,6 @@ routes.forEach((route) => {
 app.onError((error, c) => {
   if (error instanceof HTTPException) {
     // console.error(error.cause)
-    // Get the custom response
     return error.getResponse()
   }
 

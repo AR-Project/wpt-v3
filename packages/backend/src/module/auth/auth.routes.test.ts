@@ -2,16 +2,19 @@
 import { afterEach, describe, expect, it, test } from "bun:test";
 import { app } from "@/main"
 import { authTableHelper } from "@/db/_testHelper/authDbHelper";
+import { categoryTbHelper } from "@/db/_testHelper/categoryDbHelper";
+import type { AuthType, AuthTypeUser } from "@/lib/auth";
 
 describe("Authentication Flow", () => {
   afterEach(async () => {
+    await categoryTbHelper.clean()
     await authTableHelper.clean()
   })
 
   const testUser = {
     email: "test@example.com",
     password: "Password123!",
-    name: "Test User",
+    name: "testuser",
   };
 
   it("should sign up a new user", async () => {
@@ -21,10 +24,15 @@ describe("Authentication Flow", () => {
       body: JSON.stringify(testUser),
     });
 
+    const data = await res.json() as { token: string, user: AuthTypeUser };
+    const category = await categoryTbHelper.find(data.user.id)
+
     expect(res.status).toBe(200);
-    const data = await res.json();
-    // @ts-expect-error 
     expect(data.user.email).toBe(testUser.email);
+    expect(category.length).toBe(1)
+    expect(category[0]?.name).toBe("testuser's Category")
+
+
   });
 
   test("should fail with wrong credentials", async () => {

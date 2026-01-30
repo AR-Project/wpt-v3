@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 
 import { db } from "@db/index";
-import { user } from "@db/schema/auth.schema";
+import { account, session, user } from "@db/schema/auth.schema";
 
 
 type CleanOption = {
@@ -16,7 +16,8 @@ export const authTableHelper = {
 
   },
   clean: async (option?: CleanOption) => {
-    await db.delete(user).where(option?.userId ? eq(user.id, option.userId) : undefined
-    )
+    await db.delete(user).where(option?.userId ? eq(user.id, option.userId) : undefined)
+    await db.delete(account).where(option?.userId ? eq(account.id, option.userId) : undefined)
+    await db.delete(session).where(option?.userId ? eq(session.id, option.userId) : undefined)
   }
 }

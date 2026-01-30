@@ -1,5 +1,6 @@
 import { relations } from "drizzle-orm";
 import { index, integer, sqliteTable, text, type AnySQLiteColumn } from "drizzle-orm/sqlite-core";
+import { category } from "./category.schema";
 
 export type Role = "admin" | "manager" | "staff" | "guest"
 
@@ -23,7 +24,11 @@ export const user = sqliteTable("user", {
   role: text("role", { enum: roleList }).notNull().default("admin"),
   parentId: text("parent_id")
     .references((): AnySQLiteColumn => user.id, { onDelete: "cascade", }),
+  defaultCategoryId: text("default_category_id")
+    .references((): AnySQLiteColumn => category.id)
 });
+
+export type UserCreatePayloadDB = typeof user.$inferInsert
 
 export const session = sqliteTable(
   "session",
@@ -94,6 +99,10 @@ export const userRelations = relations(user, ({ many, one }) => ({
   parentUser: one(user, {
     fields: [user.parentId],
     references: [user.id]
+  }),
+  defaultCategory: one(category, {
+    fields: [user.defaultCategoryId],
+    references: [category.id]
   })
 
 }));
