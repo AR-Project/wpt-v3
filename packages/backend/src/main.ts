@@ -1,28 +1,36 @@
+import type { AuthType } from "@lib/auth";
 import { Hono } from "hono";
-import { setCookie } from "hono/cookie";
+import { HTTPException } from "hono/http-exception";
 import { logger } from "hono/logger";
 import { trimTrailingSlash } from 'hono/trailing-slash'
 
-export const app = new Hono().basePath("/api/v1");
+import { authRoute } from "module/auth/auth.routes";
 
-app.use("*", logger());
+const routes = [authRoute]
+
+export const app = new Hono<{ Variables: AuthType }>().basePath("/api/");
+
+if (process.env.NODE_ENV !== 'test') {
+  app.use("*", logger());
+
+}
 app.use(trimTrailingSlash())
 
-app.get("/", (c) => {
+routes.forEach((route) => {
+  app.route("/", route)
+})
 
-  setCookie(c, 'session_token', "test-123", {
-    httpOnly: true, // Makes the cookie inaccessible to client-side JavaScript
-    secure: true,   // Ensures the cookie is only sent over HTTPS (recommended)
-    maxAge: 60 * 60 * 24 * 7, // Cookie expiration in seconds (e.g., 1 week)
-    path: '/',      // Determines the path for which the cookie is valid
-    sameSite: 'Strict' // Controls when cookies are sent with cross-site requests
-  });
+app.onError((error, c) => {
+  if (error instanceof HTTPException) {
+    // console.error(error.cause)
+    // Get the custom response
+    return error.getResponse()
+  }
 
-  return c.json({
-    message: "success",
-    timestamp: new Date().toISOString(),
-  });
-});
+  return c.json({ message: "Internal Error" }, 500)
+
+
+})
 
 export default {
   port: 8000,

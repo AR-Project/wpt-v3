@@ -10,6 +10,12 @@ dist
 coverage
 *.lcov
 
+#drizzle
+drizzle
+
+#database
+*.sqlite
+
 # logs
 logs
 _.log

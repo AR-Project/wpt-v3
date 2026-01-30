@@ -9,12 +9,11 @@
     "allowJs": true,
     "baseUrl": "./src",
     "paths": {
-      "@lib/*": [
-        "./lib/*"
-      ],
-      "@shared/*": [
-        "../../shared/type/*"
-      ]
+      "@/*": ["./*"],
+      "@lib/*": ["./lib/*"],
+      "@db/*": ["./db/*"],
+      "@module/*": ["./module/*"],
+
     },
 
     // Bundler mode
