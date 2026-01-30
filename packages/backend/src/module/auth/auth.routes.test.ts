@@ -2,7 +2,6 @@
 import { afterEach, describe, expect, it, test } from "bun:test";
 import { app } from "@/main"
 import { authTableHelper } from "@/db/_testHelper/authDbHelper";
-import type { AuthType } from "@/lib/auth";
 
 describe("Authentication Flow", () => {
   afterEach(async () => {
