@@ -8,6 +8,7 @@ export const auth = betterAuth({
   }),
   user: {
     additionalFields: {
+      // Copy this value into `inferAddtionalFields` on client SDK
       role: {
         type: "string",
         defaultValue: "admin",
