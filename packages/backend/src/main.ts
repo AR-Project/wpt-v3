@@ -1,14 +1,12 @@
-import type { AuthType } from "@lib/auth";
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 import { logger } from "hono/logger";
 import { trimTrailingSlash } from 'hono/trailing-slash'
 
 import { authRoute } from "module/auth/auth.routes";
+import { profileRoute } from "./module/profile/profile.routes";
 
-const routes = [authRoute]
-
-export const app = new Hono<{ Variables: AuthType }>().basePath("/api/");
+export const app = new Hono().basePath("/api/");
 
 if (process.env.NODE_ENV !== 'test') {
   app.use("*", logger());
@@ -16,13 +14,11 @@ if (process.env.NODE_ENV !== 'test') {
 }
 app.use(trimTrailingSlash())
 
-routes.forEach((route) => {
-  app.route("/", route)
-})
+app.route("/", authRoute)
+app.route("/", profileRoute)
 
 app.onError((error, c) => {
   if (error instanceof HTTPException) {
-    // console.error(error.cause)
     return error.getResponse()
   }
 

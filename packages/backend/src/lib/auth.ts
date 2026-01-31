@@ -49,8 +49,12 @@ export const auth = betterAuth({
         return;
       }
 
-      // TODO: Normal email sending logic for production goes here ...
+      // FUTURE: Normal email sending logic for production goes here ...
     },
+  },
+
+  logger: {
+    disabled: Bun.env.NODE_ENV === "test"
   },
 
   databaseHooks: {
@@ -80,9 +84,13 @@ export const auth = betterAuth({
   }
 });
 
-export type AuthType = {
+export type PublicType = {
   "user": typeof auth.$Infer.Session.user | null
   "session": typeof auth.$Infer.Session.session | null
 }
+export type ProtectedType = {
+  "user": typeof auth.$Infer.Session.user
+  "session": typeof auth.$Infer.Session.session
+}
 
-export type AuthTypeUser = typeof auth.$Infer.Session.user
+export type AuthUserType = typeof auth.$Infer.Session.user

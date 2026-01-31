@@ -5,7 +5,7 @@ import { account, session, user } from "@db/schema/auth.schema";
 
 
 type CleanOption = {
-  userId?: string
+  userId?: string | null
 }
 
 export const authTableHelper = {
@@ -16,8 +16,8 @@ export const authTableHelper = {
 
   },
   clean: async (option?: CleanOption) => {
+    await db.delete(session).where(option?.userId ? eq(session.userId, option.userId) : undefined)
+    await db.delete(account).where(option?.userId ? eq(account.userId, option.userId) : undefined)
     await db.delete(user).where(option?.userId ? eq(user.id, option.userId) : undefined)
-    await db.delete(account).where(option?.userId ? eq(account.id, option.userId) : undefined)
-    await db.delete(session).where(option?.userId ? eq(session.id, option.userId) : undefined)
   }
 }

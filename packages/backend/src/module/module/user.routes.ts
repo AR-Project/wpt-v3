@@ -1,1 +1,0 @@
-// All user information should be done via auth api
