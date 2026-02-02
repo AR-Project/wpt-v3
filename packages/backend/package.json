@@ -10,6 +10,7 @@
   "scripts": {
     "dev": "bun run --hot ./src/main.ts ",
     "test": "bun --env-file=.env.test.local test --watch",
+    "test:c": "bun --env-file=.env.test.local test --concurrent --watch",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:migrate:test": "bun --env-file=.env.test.local -- drizzle-kit migrate",

@@ -1,5 +1,4 @@
-// tests/auth.test.ts
-import { afterEach, describe, expect, it, test } from "bun:test";
+import { afterEach, describe, expect, test } from "bun:test";
 import { app } from "@/main"
 import { authTableHelper } from "@/db/_testHelper/authDbHelper";
 import { categoryTbHelper } from "@/db/_testHelper/categoryDbHelper";
@@ -14,7 +13,7 @@ describe("Authentication Flow", () => {
     await authTableHelper.clean({ userId: currentUserId })
   })
 
-  test("should sign up a new user", async () => {
+  test.serial("should sign up a new user", async () => {
     const testUser = {
       email: "signup@example.com",
       password: "Password123!",
@@ -39,8 +38,7 @@ describe("Authentication Flow", () => {
 
   });
 
-  test("should fail with wrong credentials", async () => {
-
+  test.serial("should fail with wrong credentials", async () => {
     const testUser = {
       email: "fail-sign-up@example.com",
       password: "Password123!",
@@ -58,13 +56,9 @@ describe("Authentication Flow", () => {
 
     console.log(res.status);
     expect(res.status).toBe(401)
-
-
   })
 
-  test("should sign in and return a session cookie", async () => {
-    // register new user
-
+  test.serial("should sign in and return a session cookie", async () => {
     const testUser = {
       email: "signup-signin-cookie@example.com",
       password: "Password123!",
@@ -73,7 +67,6 @@ describe("Authentication Flow", () => {
 
     const data = await signUpHelper(testUser, app)
     currentUserId = data.user.id
-
 
     const res = await app.request("/api/auth/sign-in/email", {
       method: "POST",

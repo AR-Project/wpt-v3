@@ -6,6 +6,6 @@ export const authRoute = new Hono<{ Variables: PublicType }>({
   strict: false,
 })
 
-authRoute.on(['POST', 'GET'], '/auth/*', (c) => {
+authRoute.on(['POST', 'GET'], '/*', (c) => {
   return auth.handler(c.req.raw)
 })

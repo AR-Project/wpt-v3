@@ -6,7 +6,7 @@ import { trimTrailingSlash } from 'hono/trailing-slash'
 import { authRoute } from "module/auth/auth.routes";
 import { profileRoute } from "./module/profile/profile.routes";
 
-export const app = new Hono().basePath("/api/");
+export const app = new Hono().basePath("/api");
 
 if (process.env.NODE_ENV !== 'test') {
   app.use("*", logger());
@@ -14,8 +14,8 @@ if (process.env.NODE_ENV !== 'test') {
 }
 app.use(trimTrailingSlash())
 
-app.route("/", authRoute)
-app.route("/", profileRoute)
+app.route("/auth", authRoute)
+app.route("/profile", profileRoute)
 
 app.onError((error, c) => {
   if (error instanceof HTTPException) {

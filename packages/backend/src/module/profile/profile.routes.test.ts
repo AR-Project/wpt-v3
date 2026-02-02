@@ -4,7 +4,7 @@ import { app } from "@/main";
 import { categoryTbHelper } from "@/db/_testHelper/categoryDbHelper";
 import { authTableHelper } from "@/db/_testHelper/authDbHelper";
 
-import { signInHelper, signUpHelper } from "../auth/auth.routes.test";
+import { signInHelper } from "../auth/auth.routes.test";
 
 describe("profile route", () => {
   let currentUserId: string | null = "";

@@ -9,7 +9,7 @@ export const profileRoute = new Hono<{ Variables: ProtectedType }>({
 
 profileRoute.use(authProtectedMiddleware)
 
-profileRoute.get("/profile", async (c) => {
+profileRoute.get("/", async (c) => {
   const user = c.get("user")
 
   return c.json({ message: `Hello ${user.name}` })
