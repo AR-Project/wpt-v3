@@ -54,7 +54,6 @@ describe("Authentication Flow", () => {
       }),
     });
 
-    console.log(res.status);
     expect(res.status).toBe(401)
   })
 
@@ -110,6 +109,7 @@ export async function signUpHelper(
 
 }
 
+/** Test helper for sign-up, then sign-in a user. Return cookie */
 export async function signInHelper(user: SignUpPayload, appInstance: HonoApp): Promise<{ id: string, cookie: string }> {
   const data = await signUpHelper(user, appInstance)
 
@@ -125,10 +125,6 @@ export async function signInHelper(user: SignUpPayload, appInstance: HonoApp): P
   expect(res.status).toBe(200)
   const cookie = res.headers.get("set-cookie");
   if (!cookie) throw new Error("Signin in failed")
-
-  console.log(data.user.id);
-
-
   return { id: data.user.id, cookie }
 
 }

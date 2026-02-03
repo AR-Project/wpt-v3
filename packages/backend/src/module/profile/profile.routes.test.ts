@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, test } from "bun:test";
+import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 
 import { app } from "@/main";
 import { categoryTbHelper } from "@/db/_testHelper/categoryDbHelper";
@@ -8,8 +8,21 @@ import { signInHelper } from "../auth/auth.routes.test";
 
 describe("profile route", () => {
   let currentUserId: string | null = "";
+  let cookie: string = ""
 
-  afterEach(async () => {
+  beforeAll(async () => {
+    const testUser = {
+      email: "profile@test.com",
+      password: "Password123!",
+      name: "test-user-profile",
+    };
+
+    const data = await signInHelper(testUser, app);
+    currentUserId = data.id
+    cookie = data.cookie
+  })
+
+  afterAll(async () => {
     await categoryTbHelper.clean({ userId: currentUserId });
     await authTableHelper.clean({ userId: currentUserId });
   });
@@ -20,22 +33,15 @@ describe("profile route", () => {
   });
 
   test("should success when access profile when signed out", async () => {
-    const testUser = {
-      email: "profile@test.com",
-      password: "Password123!",
-      name: "test-user-profile",
-    };
-
-    const data = await signInHelper(testUser, app);
-    currentUserId = data.id
 
     const profileRes = await app.request("/api/profile", {
       headers: {
-        Cookie: data.cookie
+        Cookie: cookie
       },
     });
 
     const resJson = (await profileRes.json()) as { message: string };
+    expect(profileRes.status).toBe(200)
     expect(resJson.message).toBeDefined();
     expect(resJson.message).toBe("Hello test-user-profile");
   });

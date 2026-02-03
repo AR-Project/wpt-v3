@@ -6,6 +6,7 @@ import { category } from "../schema/category.schema";
 
 type CleanOption = {
   userId?: string | null
+  categoryId?: string | null
 }
 
 export const categoryTbHelper = {
@@ -21,11 +22,17 @@ export const categoryTbHelper = {
   },
 
   clean: async (option?: CleanOption) => {
+    const byUser = option?.userId
+      ? or(
+        eq(category.userIdCreator, option.userId),
+        eq(category.userIdOwner, option.userId),
+      )
+      : undefined
+    const byCategory = option?.categoryId ? eq(category.id, option.categoryId) : undefined
+
     await db
       .delete(category)
-      .where(option?.userId
-        ? or(eq(category.userIdCreator, option.userId), eq(category.userIdOwner, option.userId))
-        : undefined
+      .where(or(byUser, byCategory)
       )
   }
 }

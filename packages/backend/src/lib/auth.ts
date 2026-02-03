@@ -79,10 +79,19 @@ export const auth = betterAuth({
 
           })
         },
-      }
+      },
     }
+
   }
 });
+
+export function sanitizeUser(user: AuthUserType) {
+  const { parentId, ...rest } = user
+  return {
+    ...rest,
+    parentId: parentId ? parentId : user.id
+  }
+}
 
 export type PublicType = {
   "user": typeof auth.$Infer.Session.user | null

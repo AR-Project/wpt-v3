@@ -5,6 +5,7 @@ import { trimTrailingSlash } from 'hono/trailing-slash'
 
 import { authRoute } from "module/auth/auth.routes";
 import { profileRoute } from "./module/profile/profile.routes";
+import { categoryRoute } from "./module/category/category.routes";
 
 export const app = new Hono().basePath("/api");
 
@@ -16,6 +17,7 @@ app.use(trimTrailingSlash())
 
 app.route("/auth", authRoute)
 app.route("/profile", profileRoute)
+app.route("/category", categoryRoute)
 
 app.onError((error, c) => {
   if (error instanceof HTTPException) {
