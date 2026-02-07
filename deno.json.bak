@@ -1,5 +1,0 @@
-{
-  "tasks": {
-    "dev": "deno task --cwd packages/backend dev & deno task --cwd packages/frontend dev"
-  }
-}

@@ -1,5 +1,5 @@
 {
-  "name": "wpt-v3",
+  "name": "wpt",
   "module": "index.ts",
   "type": "module",
   "private": true,
@@ -9,6 +9,10 @@
   "peerDependencies": {
     "typescript": "^5"
   },
+  "workspaces": [
+    "./packages/backend",
+    "./packages/frontend"
+  ],
   "scripts": {
     "api": "cd ./packages/backend && bun run dev",
     "api:test": "cd ./packages/backend && bun run test",

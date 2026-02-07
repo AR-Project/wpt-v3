@@ -11,6 +11,10 @@ export const auth = betterAuth({
   database: drizzleAdapter(db, {
     provider: "sqlite", // or "mysql", "sqlite"
   }),
+  trustedOrigins: [
+    'http://localhost:3000',
+    // ... any production URLs
+  ],
   user: {
     additionalFields: {
       // Copy this value into `inferAddtionalFields` on client SDK

@@ -18,13 +18,18 @@ export default defineConfig({
     tailwindcss(),
   ],
   server: {
-    port: 5173,
+    port: 3000,
     proxy: {
       // Setup the proxy for the backend
-      "/api": {
+      "/api/": {
         target: "http://localhost:8000",
         changeOrigin: true,
       },
+    },
+    fs: {
+      // Allow searching for files in the entire 'packages' directory
+      // or simply use '..' to allow the immediate parent
+      allow: ['..'],
     },
   },
   resolve: {
