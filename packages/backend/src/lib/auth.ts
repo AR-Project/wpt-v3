@@ -79,7 +79,9 @@ export const auth = betterAuth({
 
             const [newCategory] = await createCategoryTx(tx, createCategoryPayload)
 
-            await tx.update(user).set({ defaultCategoryId: newCategory?.id }).where(eq(user.id, userFromAuth.id))
+            if (!newCategory) throw new Error("fail to create default category")
+
+            await tx.update(user).set({ defaultCategoryId: newCategory.id }).where(eq(user.id, userFromAuth.id))
 
           })
         },
