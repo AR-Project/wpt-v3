@@ -119,9 +119,10 @@ export const auth = betterAuth({
 
 /** Utils for assigning parentId. Making sure that `parentId` will never be null*/
 export function sanitizeUser(user: AuthUser) {
-  const { parentId, defaultCategoryId, ...rest } = user
+  const { parentId, defaultCategoryId, role, ...rest } = user
   return {
     ...rest,
+    role: role as string,
     defaultCategoryId: defaultCategoryId as string,
     parentId: parentId ? parentId : user.id
   }
