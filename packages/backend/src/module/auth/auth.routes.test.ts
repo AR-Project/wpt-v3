@@ -2,10 +2,15 @@ import { afterEach, describe, expect, test } from "bun:test";
 import { app } from "@/main"
 import { authTableHelper } from "@/db/_testHelper/authDbHelper";
 import { categoryTbHelper } from "@/db/_testHelper/categoryDbHelper";
-import type { AuthUserType } from "@/lib/auth";
+import type { AuthUser } from "@/lib/auth";
+import { signUpHelper } from "./auth.routes.test.helper";
 
 
-describe("Authentication Flow", () => {
+
+
+
+
+describe("auth routes", () => {
   let currentUserId: string = ""
 
   afterEach(async () => {
@@ -26,7 +31,7 @@ describe("Authentication Flow", () => {
       body: JSON.stringify(testUser),
     });
 
-    const data = await res.json() as { token: string, user: AuthUserType };
+    const data = await res.json() as { token: string, user: AuthUser };
     const category = await categoryTbHelper.find(data.user.id)
 
     expect(res.status).toBe(200);
@@ -35,7 +40,6 @@ describe("Authentication Flow", () => {
     expect(category[0]?.name).toBe("testuser's Category")
 
     currentUserId = data.user.id
-
   });
 
   test.serial("should fail with wrong credentials", async () => {
@@ -81,50 +85,25 @@ describe("Authentication Flow", () => {
     expect(cookie).toContain("better-auth.session_token");
 
   });
+
+  test.serial("should fail 404 when accessing admin via public", async () => {
+
+
+    const res = await app.request("/api/auth/admin/create-user", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: "email@email.com",
+        password: "password",
+        name: "test",
+        role: "user",
+        data: {
+          parentId: "invalid",
+          defaultCategoryId: "invalid"
+        }
+      }),
+    });
+
+    expect(res.status).toBe(404)
+  });
 });
-
-
-/** Helper for test suite: registering new user */
-
-type SignUpPayload = {
-  email: string;
-  password: string;
-  name: string;
-}
-
-type HonoApp = typeof app
-
-export async function signUpHelper(
-  user: SignUpPayload,
-  appInstance: HonoApp
-) {
-  const signUpRes = await appInstance.request("/api/auth/sign-up/email", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(user),
-  });
-
-  return await signUpRes.json() as { token: string, user: AuthUserType };
-
-
-}
-
-/** Test helper for sign-up, then sign-in a user. Return cookie */
-export async function signInHelper(user: SignUpPayload, appInstance: HonoApp): Promise<{ id: string, cookie: string }> {
-  const data = await signUpHelper(user, appInstance)
-
-  const res = await appInstance.request("/api/auth/sign-in/email", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      email: user.email,
-      password: user.password,
-    }),
-  });
-
-  expect(res.status).toBe(200)
-  const cookie = res.headers.get("set-cookie");
-  if (!cookie) throw new Error("Signin in failed")
-  return { id: data.user.id, cookie }
-
-}

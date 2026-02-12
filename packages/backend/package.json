@@ -18,6 +18,8 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:migrate:test": "bun --env-file=.env.test.local -- drizzle-kit migrate",
+    "db:push": "drizzle-kit push",
+    "db:push:test": "bun --env-file=.env.test.local -- drizzle-kit push",
     "db:inspect": "drizzle-kit introspect",
     "db:drop": "drizzle-kit drop"
   },

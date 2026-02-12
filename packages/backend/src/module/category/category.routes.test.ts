@@ -10,8 +10,9 @@ import {
 import { app } from "@/main";
 import { categoryTbHelper } from "@/db/_testHelper/categoryDbHelper";
 import { authTableHelper } from "@/db/_testHelper/authDbHelper";
+import { signUpSignInHelper } from "../auth/auth.routes.test.helper";
 
-import { signInHelper } from "../auth/auth.routes.test";
+
 
 describe("category route", () => {
   let currentUserId: string | null = "";
@@ -25,7 +26,7 @@ describe("category route", () => {
       name: "test-user-category",
     };
 
-    const userData = await signInHelper(testUser, app);
+    const userData = await signUpSignInHelper(testUser, app);
     cookie = userData.cookie;
     currentUserId = userData.id;
   });

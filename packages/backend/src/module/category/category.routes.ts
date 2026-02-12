@@ -8,6 +8,8 @@ import { sanitizeUser, type ProtectedType } from '@lib/auth'
 import { category, type CreateCategoryDbPayload } from '@/db/schema/category.schema'
 import { generateId } from '@/lib/idGenerator'
 import { createCategorySchema } from '@/shared'
+import z from 'zod'
+import { eq } from 'drizzle-orm'
 
 
 export const categoryRoute = new Hono<{ Variables: ProtectedType }>({
@@ -52,6 +54,37 @@ export const categoryRoute = new Hono<{ Variables: ProtectedType }>({
         if (!createdCategory) throw new HTTPException(500)
 
         return c.json(createdCategory, 201)
-      } catch (_) { throw new HTTPException(500) }
+      } catch (e) {
+        console.log(e);
+        throw new HTTPException(500)
+      }
     }
+  )
+  .delete("/",
+    zValidator("json", z.object({ id: z.string().min(10) })),
+    async (c) => {
+      const payload = c.req.valid("json")
+      // const user = sanitizeUser(c.get("user"))
+
+      /**
+       * TODO: Validate user creation
+       * 1. Validate category ownership
+       * 2. Prevent user deleting default category
+       */
+
+      try {
+
+        await db
+          .delete(category)
+          .where(eq(category.id, payload.id))
+
+
+
+        return c.json({}, 200)
+      } catch (e) {
+        console.log(e);
+        throw new HTTPException(500)
+      }
+    }
+
   )

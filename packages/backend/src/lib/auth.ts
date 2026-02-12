@@ -1,32 +1,36 @@
-import type { CreateCategoryDbPayload } from "@/db/schema/category.schema";
-import { createCategoryTx } from "@/module/category/category.repository";
-import { db } from "@db/index";
 import { betterAuth } from "better-auth";
-import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { generateId } from "./idGenerator";
-import { user } from "@/db/schema/auth.schema";
 import { eq } from "drizzle-orm";
+import { admin } from "better-auth/plugins"
+import { drizzleAdapter } from "better-auth/adapters/drizzle";
+
+import { db } from "@db/index";
+import type { CreateCategoryDbPayload } from "@/db/schema/category.schema";
+import { user } from "@/db/schema/auth.schema";
+
+import { createCategoryTx } from "@/module/category/category.repository";
+
+import type { EnsureNonNullable } from "./types-helper";
+import { generateId } from "./idGenerator";
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
     provider: "sqlite", // or "mysql", "sqlite"
   }),
+  plugins: [admin({
+    defaultRole: "admin"
+    // TODO: define roles https://www.better-auth.com/docs/plugins/admin#custom-permissions
+  })],
   trustedOrigins: [
     'http://localhost:3000',
     // ... any production URLs
   ],
+  disabledPaths: [
+    '/admins/*'
+  ],
   user: {
     additionalFields: {
       // Copy this value into `inferAddtionalFields` on client SDK
-      role: {
-        type: "string",
-        defaultValue: "admin",
-      },
-      isSignInAllowed: {
-        type: "boolean",
-        defaultValue: true,
-      },
-      defaultCategory: {
+      defaultCategoryId: {
         type: "string",
         required: false,
         input: false
@@ -58,7 +62,7 @@ export const auth = betterAuth({
   },
 
   logger: {
-    disabled: Bun.env.NODE_ENV === "test"
+    disabled: Bun.env.BETTER_AUTH_DISABLE_LOG === "true"
   },
 
   databaseHooks: {
@@ -66,8 +70,21 @@ export const auth = betterAuth({
       create: {
         after: async (userFromAuth) => {
           await db.transaction(async (tx) => {
-            const DEFAULT_NAME = `${userFromAuth.name}'s Category`
+            // create user via admin api - set created user as user
+            if (userFromAuth.parentId && userFromAuth.defaultCategoryId) {
+              await tx
+                .update(user)
+                .set({
+                  defaultCategoryId: userFromAuth.defaultCategoryId as string,
+                  parentId: userFromAuth.parentId as string,
+                })
+                .where(eq(user.id, userFromAuth.id))
 
+              return
+            }
+
+            // regular sign up via public - set created user as admin
+            const DEFAULT_NAME = `${userFromAuth.name}'s Category`
             const categoryId = `cat_${generateId()}`
 
             const createCategoryPayload: CreateCategoryDbPayload = {
@@ -75,14 +92,22 @@ export const auth = betterAuth({
               name: DEFAULT_NAME,
               userIdOwner: userFromAuth.id,
               userIdCreator: userFromAuth.id,
+              createdAt: new Date()
             }
 
             const [newCategory] = await createCategoryTx(tx, createCategoryPayload)
 
             if (!newCategory) throw new Error("fail to create default category")
 
-            await tx.update(user).set({ defaultCategoryId: newCategory.id }).where(eq(user.id, userFromAuth.id))
+            await tx
+              .update(user)
+              .set({
+                defaultCategoryId: newCategory.id,
+                parentId: userFromAuth.id,
+              })
+              .where(eq(user.id, userFromAuth.id))
 
+            return
           })
         },
       },
@@ -91,21 +116,28 @@ export const auth = betterAuth({
   }
 });
 
-export function sanitizeUser(user: AuthUserType) {
-  const { parentId, ...rest } = user
+
+/** Utils for assigning parentId. Making sure that `parentId` will never be null*/
+export function sanitizeUser(user: AuthUser) {
+  const { parentId, defaultCategoryId, ...rest } = user
   return {
     ...rest,
+    defaultCategoryId: defaultCategoryId as string,
     parentId: parentId ? parentId : user.id
   }
 }
+
+export type AuthUser = typeof auth.$Infer.Session.user
+
+type NonNullableUser = EnsureNonNullable<AuthUser, "parentId" | "defaultCategoryId">
 
 export type PublicType = {
   "user": typeof auth.$Infer.Session.user | null
   "session": typeof auth.$Infer.Session.session | null
 }
 export type ProtectedType = {
-  "user": typeof auth.$Infer.Session.user
+  "user": NonNullableUser
   "session": typeof auth.$Infer.Session.session
 }
 
-export type AuthUserType = typeof auth.$Infer.Session.user
+export type AuthUserType = NonNullableUser

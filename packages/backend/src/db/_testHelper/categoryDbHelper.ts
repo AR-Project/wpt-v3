@@ -18,9 +18,8 @@ export const categoryTbHelper = {
           eq(category.userIdOwner, userId)
         )
     })
-
   },
-
+  getAll: async () => await db.query.category.findMany(),
   clean: async (option?: CleanOption) => {
     const byUser = option?.userId
       ? or(

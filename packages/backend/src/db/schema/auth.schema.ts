@@ -19,9 +19,14 @@ export const user = sqliteTable("user", {
   updatedAt: integer("updated_at", { mode: "timestamp_ms" })
     .$onUpdate(() => new Date())
     .notNull(),
-  // additional column
-  isSignInAllowed: integer("allow_login", { mode: "boolean" }).notNull().default(true),
+
+  // admin plugin column
+  banned: integer("banned", { mode: "boolean" }),
   role: text("role", { enum: roleList }).notNull().default("admin"),
+  banReason: text("ban_reason"),
+  banExpires: integer("created_at", { mode: "timestamp_ms" }),
+
+  // additional column - wpt
   parentId: text("parent_id")
     .references((): AnySQLiteColumn => user.id, { onDelete: "cascade", }),
   defaultCategoryId: text("default_category_id")
@@ -45,6 +50,9 @@ export const session = sqliteTable(
     userId: text("user_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
+    // additional field - admin plugin
+    impersonatedBy: text("impersonated_by")
+
   },
   (table) => [index("session_userId_idx").on(table.userId)],
 );
