@@ -5,7 +5,6 @@ import { inferAdditionalFields } from "better-auth/client/plugins";
 export const authClient = createAuthClient({
   plugins: [inferAdditionalFields({
     user: {
-      // TODO: match field with backend
       role: {
         type: "string",
         defaultValue: "admin",
