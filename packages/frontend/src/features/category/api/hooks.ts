@@ -27,6 +27,6 @@ export const useDeleteCategory = () => {
       await client.api.category.$delete({ json: payload },)
     },
     onSuccess: async () => await query.invalidateQueries({ queryKey: categoryQueryKey }),
-    onError: (error) => console.error("Error while creating delete: ", error),
+    onError: (error) => console.error("Error while delete: ", error),
   })
 }
