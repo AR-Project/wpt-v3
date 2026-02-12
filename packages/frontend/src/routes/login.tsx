@@ -33,9 +33,7 @@ function LoginPage() {
       return data
     },
     onSuccess: async () => {
-      console.log("Login Successful! Redirecting...")
       await queryClient.invalidateQueries({ queryKey: authQueryKey })
-      console.log("authQuery fetch")
       navigate({ to: "/dashboard" })
     },
     onError: (err) => {
