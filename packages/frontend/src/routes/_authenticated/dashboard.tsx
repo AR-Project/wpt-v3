@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate, useRouter } from '@tanstack/react-router'
+import { createFileRoute, Link, useNavigate, useRouter } from '@tanstack/react-router'
 import { authClient } from '@/lib/auth-client'
 import { useQueryClient } from '@tanstack/react-query'
 import { authQueryKey } from '@/hooks/use-auth'
@@ -23,7 +23,6 @@ function Dashboard() {
 
   const handleLogout = async () => {
     await authClient.signOut()
-    // Clear the cache and go to login
     await queryClient.invalidateQueries({ queryKey: authQueryKey })
     await router.invalidate()
     navigate({ to: '/login' })
@@ -31,13 +30,18 @@ function Dashboard() {
 
   return (
     <div>
-      <h1>Dashboard</h1>
-      <p>Welcome back, <strong>{auth.user.name}</strong>!</p>
-      <p>Your email is: {auth.user.email}</p>
 
-      <hr />
+      <div className='p-5'>
+        <h1>Dashboard</h1>
+        <p>Welcome back, <strong>{auth.user.name}</strong>!</p>
+        <p>Your email is: {auth.user.email}</p>
 
-      <button type='button' onClick={handleLogout}>Logout</button>
+        <hr />
+
+        <button type='button' onClick={handleLogout}>Logout</button>
+
+      </div>
+      <Link to='/category'>Category List</Link>
     </div>
   )
 }

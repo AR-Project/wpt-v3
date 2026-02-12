@@ -13,8 +13,10 @@ export const useAuth = () => {
   const query = useQuery({
     queryKey: authQueryKey,
     queryFn: getSession,
-    staleTime: 0,
+    staleTime: 10 * 60 * 1000,
+    gcTime: 15 * 60 * 1000,
     retry: false,
+    refetchOnWindowFocus: false
   })
 
   return query
