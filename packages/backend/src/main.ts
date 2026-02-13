@@ -24,7 +24,7 @@ export const app = new Hono().basePath("/api")
   .get("/hello", async (c) => c.json({ message: "hello from api" }))
   .onError((error, c) => {
     if (error instanceof HTTPException) return error.getResponse()
-    return c.json({ message: "Internal Error" }, 500)
+    return c.text("Internal Error", 500)
   })
 
 export type AppType = typeof app
