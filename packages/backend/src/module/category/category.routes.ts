@@ -36,7 +36,7 @@ export const categoryRoute = new Hono<{ Variables: ProtectedType }>({
     const user = c.get("user")
 
     const dbPayload: CreateCategoryDbPayload = {
-      id: `cat-${generateId(10)}`,
+      id: `cat_${generateId(10)}`,
       name: payload.name,
       userIdParent: user.parentId,
       userIdCreator: user.id,
