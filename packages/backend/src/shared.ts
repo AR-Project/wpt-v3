@@ -19,3 +19,10 @@ export const updateCategorySchema = z.object({
   name: z.string().min(3)
 })
 export type UpdateCategoryPayload = z.infer<typeof updateCategorySchema>
+
+// Item Schema
+export const createItemSchema = z.object({
+  name: z.string(),
+  categoryId: z.string().optional()
+})
+export type CreateItemPayload = z.infer<typeof createItemSchema>

@@ -35,7 +35,7 @@ export async function signUpHelper(
 }
 
 export async function signInHelper(user: SignInPayload, appInstance: HonoApp
-): Promise<{ id: string, cookie: string }> {
+): Promise<{ id: string, cookie: string, defaultCategoryId: string }> {
 
   const res = await appInstance.request("/api/auth/sign-in/email", {
     method: "POST",
@@ -50,12 +50,12 @@ export async function signInHelper(user: SignInPayload, appInstance: HonoApp
   const cookie = res.headers.get("set-cookie");
   if (!cookie) throw new Error("Signin in failed")
 
-  return { id: json.user.id, cookie }
+  return { id: json.user.id, cookie, defaultCategoryId: json.user.defaultCategoryId! }
 }
 
 /** Test helper for sign-up, then sign-in a user. Return cookie */
-export async function signUpSignInHelper(user: SignUpPayload, appInstance: HonoApp): Promise<{ id: string, cookie: string }> {
+export async function signUpSignInHelper(user: SignUpPayload, appInstance: HonoApp): Promise<{ id: string, cookie: string, defaultCategoryId: string }> {
   await signUpHelper(user, appInstance)
-  const { id, cookie } = await signInHelper({ email: user.email, password: user.password }, appInstance)
-  return { id, cookie }
+  const { id, cookie, defaultCategoryId } = await signInHelper({ email: user.email, password: user.password }, appInstance)
+  return { id, cookie, defaultCategoryId }
 }

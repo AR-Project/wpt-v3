@@ -3,6 +3,8 @@ import { user } from "./auth.schema";
 import { category } from "./category.schema";
 import { relations } from "drizzle-orm";
 
+export type CreateItemDbPayload = typeof item.$inferInsert;
+
 export const item = sqliteTable(
   "item",
   (t) => ({

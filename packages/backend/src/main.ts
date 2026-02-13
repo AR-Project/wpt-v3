@@ -6,6 +6,7 @@ import { trimTrailingSlash } from 'hono/trailing-slash'
 import { authRoute } from "module/auth/auth.routes";
 import { profileRoute } from "./module/profile/profile.routes";
 import { categoryRoute } from "./module/category/category.routes";
+import { itemRoute } from "./module/item/item.routes";
 
 
 const conditionalLogger = () => {
@@ -21,6 +22,7 @@ export const app = new Hono().basePath("/api")
   .route("/auth", authRoute)
   .route("/profile", profileRoute)
   .route("/category", categoryRoute)
+  .route("/item", itemRoute)
   .get("/hello", async (c) => c.json({ message: "hello from api" }))
   .onError((error, c) => {
     if (error instanceof HTTPException)
