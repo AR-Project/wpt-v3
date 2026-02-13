@@ -1,4 +1,4 @@
-import { db } from '@/db'
+// import { db } from '@/db'
 import { authProtectedMiddleware, } from '@/middleware/auth.middleware'
 import { zValidator } from '@hono/zod-validator'
 import { auth, type ProtectedType } from '@lib/auth'
@@ -19,8 +19,8 @@ export const profileRoute = new Hono<{ Variables: ProtectedType }>({
       parentId: z.string()
     })),
     zValidator("json", z.object({
-      email: z.string(),
-      password: z.string(),
+      email: z.email(),
+      password: z.string().min(10),
       name: z.string()
     })),
     async (c) => {
@@ -45,11 +45,7 @@ export const profileRoute = new Hono<{ Variables: ProtectedType }>({
         body: payload
       })
 
-      const childUserData = await db.query.user.findFirst({
-        where: (user, { eq }) => eq(user.id, childUser.user.id)
-      })
-
-      return c.json({ message: "user created", user: childUserData }, 201)
+      return c.json({ message: "user created", user: childUser }, 201)
     }
   )
 
