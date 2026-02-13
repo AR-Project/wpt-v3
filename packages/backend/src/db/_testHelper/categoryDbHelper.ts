@@ -15,7 +15,7 @@ export const categoryTbHelper = {
       where: (category, { eq, or }) =>
         or(
           eq(category.userIdCreator, userId),
-          eq(category.userIdOwner, userId)
+          eq(category.userIdParent, userId)
         )
     })
   },
@@ -24,7 +24,7 @@ export const categoryTbHelper = {
     const byUser = option?.userId
       ? or(
         eq(category.userIdCreator, option.userId),
-        eq(category.userIdOwner, option.userId),
+        eq(category.userIdParent, option.userId),
       )
       : undefined
     const byCategory = option?.categoryId ? eq(category.id, option.categoryId) : undefined

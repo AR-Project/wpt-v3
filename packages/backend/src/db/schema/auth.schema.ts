@@ -24,7 +24,7 @@ export const user = sqliteTable("user", {
   banned: integer("banned", { mode: "boolean" }),
   role: text("role", { enum: roleList }).notNull().default("admin"),
   banReason: text("ban_reason"),
-  banExpires: integer("created_at", { mode: "timestamp_ms" }),
+  banExpires: integer("ban_expires", { mode: "timestamp_ms" }),
 
   // additional column - wpt
   parentId: text("parent_id")
@@ -103,11 +103,13 @@ export const verification = sqliteTable(
 export const userRelations = relations(user, ({ many, one }) => ({
   sessions: many(session),
   accounts: many(account),
-  subUser: many(user),
+  subUser: many(user, { relationName: "subUser" }),
   parentUser: one(user, {
     fields: [user.parentId],
     references: [user.id]
   }),
+  categoryAsParent: many(category, { relationName: "parent" }),
+  categoryAsCreator: many(category, { relationName: "creator" }),
   defaultCategory: one(category, {
     fields: [user.defaultCategoryId],
     references: [category.id]

@@ -23,7 +23,8 @@ export const app = new Hono().basePath("/api")
   .route("/category", categoryRoute)
   .get("/hello", async (c) => c.json({ message: "hello from api" }))
   .onError((error, c) => {
-    if (error instanceof HTTPException) return error.getResponse()
+    if (error instanceof HTTPException)
+      return c.json({ message: error.message }, error.status)
     return c.text("Internal Error", 500)
   })
 

@@ -71,6 +71,7 @@ export const auth = betterAuth({
         after: async (userFromAuth) => {
           await db.transaction(async (tx) => {
             // create user via admin api - set created user as user
+            // parentId and defaultCategoryId is defined in payload
             if (userFromAuth.parentId && userFromAuth.defaultCategoryId) {
               await tx
                 .update(user)
@@ -84,13 +85,15 @@ export const auth = betterAuth({
             }
 
             // regular sign up via public - set created user as admin
+            // parentId and defaultCategoryId created on insertion
+
             const DEFAULT_NAME = `${userFromAuth.name}'s Category`
             const categoryId = `cat_${generateId()}`
 
             const createCategoryPayload: CreateCategoryDbPayload = {
               id: categoryId,
               name: DEFAULT_NAME,
-              userIdOwner: userFromAuth.id,
+              userIdParent: userFromAuth.id,
               userIdCreator: userFromAuth.id,
               createdAt: new Date()
             }

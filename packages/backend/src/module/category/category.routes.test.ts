@@ -108,4 +108,67 @@ describe("category route", () => {
     expect(categoryRes.status).toBe(400);
 
   });
+
+  test('DELETE should fail when tried deleting nonexist category', async () => {
+
+    const res = await app.request("/api/category", {
+      method: "DELETE",
+      headers: {
+        'Content-Type': 'application/json',
+        Cookie: cookie,
+      },
+      body: JSON.stringify({ id: "notExistIdd" }),
+    });
+    expect(res.status).toBe(403)
+  })
+
+  test('DELETE should fail when tried deleting default category', async () => {
+
+    const user = await authTableHelper.findById(currentUserId!)
+
+    const res = await app.request("/api/category", {
+      method: "DELETE",
+      headers: {
+        'Content-Type': 'application/json',
+        Cookie: cookie,
+      },
+      body: JSON.stringify({ id: user[0]?.defaultCategoryId }),
+    });
+    expect(res.status).toBe(403)
+
+  })
+
+  test('DELETE should success', async () => {
+    const payload = {
+      name: "delete-category"
+    }
+
+    const postRes = await app.request("/api/category", {
+      method: "POST",
+      headers: {
+        'Content-Type': 'application/json',
+        Cookie: cookie,
+      },
+      body: JSON.stringify(payload),
+    });
+
+    const postResJson = (await postRes.json()) as {
+      id: string;
+      name: string;
+    };
+
+    const res = await app.request("/api/category", {
+      method: "DELETE",
+      headers: {
+        'Content-Type': 'application/json',
+        Cookie: cookie,
+      },
+      body: JSON.stringify({ id: postResJson.id }),
+    });
+
+    expect(res.status).toBe(200)
+
+  })
+
+
 });
