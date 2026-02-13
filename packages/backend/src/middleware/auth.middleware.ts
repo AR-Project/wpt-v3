@@ -1,5 +1,6 @@
 import { auth, sanitizeUser, type ProtectedType, type PublicType } from '@/lib/auth';
 import { createMiddleware } from 'hono/factory'
+import { HTTPException } from 'hono/http-exception';
 
 /**
  * @deprecated
@@ -23,10 +24,7 @@ export const authPublicMiddleware = createMiddleware<{ Variables: PublicType }>(
 export const authProtectedMiddleware = createMiddleware<{ Variables: ProtectedType }>(async (c, next) => {
   const session = await auth.api
     .getSession({ headers: c.req.raw.headers });
-
-  if (!session) {
-    return c.json({ message: "Unauthorized" }, 401);
-  }
+  if (!session) throw new HTTPException(401)
 
   c.set("user", sanitizeUser(session.user));
   c.set("session", session.session);
