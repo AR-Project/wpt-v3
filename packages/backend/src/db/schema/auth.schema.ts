@@ -1,6 +1,7 @@
 import { relations } from "drizzle-orm";
 import { index, integer, sqliteTable, text, type AnySQLiteColumn } from "drizzle-orm/sqlite-core";
 import { category } from "./category.schema";
+import { item } from "./item.schema";
 
 export type Role = "admin" | "manager" | "staff" | "guest"
 
@@ -113,7 +114,9 @@ export const userRelations = relations(user, ({ many, one }) => ({
   defaultCategory: one(category, {
     fields: [user.defaultCategoryId],
     references: [category.id]
-  })
+  }),
+  itemsAsParent: many(item, { relationName: "parent" }),
+  itemsAsCreator: many(item, { relationName: "creator" }),
 
 }));
 

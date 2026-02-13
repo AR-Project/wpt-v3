@@ -2,6 +2,7 @@ import { relations } from "drizzle-orm";
 import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
 import { user } from "./auth.schema";
+import { item } from "./item.schema";
 
 export type CreateCategoryDbPayload = typeof category.$inferInsert;
 
@@ -42,5 +43,6 @@ export const categoryRelations = relations(category, ({ one, many }) => ({
     references: [user.id],
     relationName: "creator",
   }),
+  items: many(item),
   usersDefault: many(user),
 }));
