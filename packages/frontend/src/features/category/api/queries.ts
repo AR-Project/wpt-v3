@@ -12,4 +12,5 @@ export const getCategoryQueryOpt = queryOptions({
     if (res.status === 401) throw new ServerError("Unauthorized", res.status)
     return await res.json()
   },
+  staleTime: 5 * 60 * 1000
 })
