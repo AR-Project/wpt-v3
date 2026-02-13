@@ -24,9 +24,6 @@ export const auth = betterAuth({
     'http://localhost:3000',
     // ... any production URLs
   ],
-  disabledPaths: [
-    '/admins/*'
-  ],
   user: {
     additionalFields: {
       // Copy this value into `inferAddtionalFields` on client SDK
