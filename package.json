@@ -7,19 +7,22 @@
     "@types/bun": "latest"
   },
   "peerDependencies": {
-    "typescript": "^5"
+    "typescript": "^5.9.3"
   },
   "workspaces": [
     "./packages/backend",
     "./packages/frontend"
   ],
   "scripts": {
-    "api": "cd ./packages/backend && bun run dev",
-    "api:test": "cd ./packages/backend && bun run test",
-    "frontend": "cd ./packages/frontend && bun run dev",
-    "dev": "bun-tasks api ::: frontend"
+    "be": "cd ./packages/backend && bun run dev",
+    "be:test": "cd ./packages/backend && bun run test:c",
+    "fe": "cd ./packages/frontend && bun run dev",
+    "dev": "bun-tasks be ::: fe"
   },
   "dependencies": {
-    "bun-tasks": "^0.1.2"
+    "better-auth": "^1.4.18",
+    "bun-tasks": "^0.1.2",
+    "hono": "^4.11.9",
+    "zod": "^4.3.6"
   }
 }
