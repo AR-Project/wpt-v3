@@ -1,38 +1,38 @@
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 import { logger } from "hono/logger";
-import { trimTrailingSlash } from 'hono/trailing-slash'
+import { trimTrailingSlash } from "hono/trailing-slash";
 
-import { authRoute } from "module/auth/auth.routes";
-import { profileRoute } from "./module/profile/profile.routes";
-import { categoryRoute } from "./module/category/category.routes";
-import { itemRoute } from "./module/item/item.routes";
-
+import { authRoute } from "@module/auth/auth.routes";
+import { profileRoute } from "@module/profile/profile.routes";
+import { categoryRoute } from "@module/category/category.routes";
+import { itemRoute } from "@module/item/item.routes";
 
 const conditionalLogger = () => {
-  return process.env.NODE_ENV === 'test'
-    // biome-ignore lint/suspicious/noExplicitAny: context type not needed here
-    ? async (_c: any, next: any) => await next()
-    : logger()
-}
+	return process.env.NODE_ENV === "test"
+		? // biome-ignore lint/suspicious/noExplicitAny: context type not needed here
+			async (_c: any, next: any) => await next()
+		: logger();
+};
 
-export const app = new Hono().basePath("/api")
-  .use(conditionalLogger())
-  .use(trimTrailingSlash())
-  .route("/auth", authRoute)
-  .route("/profile", profileRoute)
-  .route("/category", categoryRoute)
-  .route("/item", itemRoute)
-  .get("/hello", async (c) => c.json({ message: "hello from api" }))
-  .onError((error, c) => {
-    if (error instanceof HTTPException)
-      return c.json({ message: error.message }, error.status)
-    return c.text("Internal Error", 500)
-  })
+export const app = new Hono()
+	.basePath("/api")
+	.use(conditionalLogger())
+	.use(trimTrailingSlash())
+	.route("/auth", authRoute)
+	.route("/profile", profileRoute)
+	.route("/category", categoryRoute)
+	.route("/item", itemRoute)
+	.get("/hello", async (c) => c.json({ message: "hello from api" }))
+	.onError((error, c) => {
+		if (error instanceof HTTPException)
+			return c.json({ message: error.message }, error.status);
+		return c.text("Internal Error", 500);
+	});
 
-export type AppType = typeof app
+export type AppType = typeof app;
 
 export default {
-  port: 8000,
-  fetch: app.fetch,
-} 
+	port: 8000,
+	fetch: app.fetch,
+};
