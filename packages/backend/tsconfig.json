@@ -7,12 +7,11 @@
     "moduleDetection": "force",
     "jsx": "react-jsx",
     "allowJs": true,
-    "baseUrl": "./src",
     "paths": {
-      "@/*": ["./*"],
-      "@lib/*": ["./lib/*"],
-      "@db/*": ["./db/*"],
-      "@module/*": ["./module/*"],
+      "@/*": ["./src/*"],
+      "@lib/*": ["./src/lib/*"],
+      "@db/*": ["./src/db/*"],
+      "@module/*": ["./src/module/*"],
 
     },
 
