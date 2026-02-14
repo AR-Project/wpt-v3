@@ -27,7 +27,7 @@ export const app = new Hono()
 	.onError((error, c) => {
 		if (error instanceof HTTPException)
 			return c.json({ message: error.message }, error.status);
-		return c.text("Internal Error", 500);
+		return c.json({ message: "Internal Error" }, 500);
 	});
 
 export type AppType = typeof app;
