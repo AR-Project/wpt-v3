@@ -10,8 +10,7 @@ import { db } from "@/db";
 import { item, type CreateItemDbPayload } from "@/db/schema/item.schema";
 
 import { authProtectedMiddleware } from "@/middleware/auth.middleware";
-
-import { createItemSchema } from "@/shared";
+import { createItemSchema } from "./item.schema";
 
 export const itemRoute = new Hono<{ Variables: ProtectedType }>({
 	strict: false,
@@ -44,10 +43,12 @@ export const itemRoute = new Hono<{ Variables: ProtectedType }>({
 			userIdCreator: user.id,
 		};
 
-		const [createdItem] = await db
-			.insert(item)
-			.values(dbPayload)
-			.returning({ id: item.id, name: item.name });
+		const [createdItem] = await db.transaction(async (tx) => {
+			return await tx
+				.insert(item)
+				.values(dbPayload)
+				.returning({ id: item.id, name: item.name });
+		});
 
 		return c.json(createdItem, 201);
 	})
