@@ -1,4 +1,4 @@
-import { index, sqliteTable, uniqueIndex } from "drizzle-orm/sqlite-core";
+import { index, sqliteTable } from "drizzle-orm/sqlite-core";
 import { user } from "./auth.schema";
 import { category } from "./category.schema";
 import { relations } from "drizzle-orm";
