@@ -6,6 +6,7 @@ import { signUpSignInHelper } from "../auth/auth.routes.test.helper";
 import { itemTbHelper } from "@/db/_testHelper/itemDbHelper";
 import { categoryTbHelper } from "@/db/_testHelper/categoryDbHelper";
 import type { CreateCategoryDbPayload } from "@/db/schema/category.schema";
+import type { UpdateItemsSortOrderPayload } from "./item.schema";
 
 type PostItemRes = {
 	id: string;
@@ -39,51 +40,54 @@ describe("item route", () => {
 		await authTableHelper.clean({ userId: currentUserId });
 	});
 
-	test.serial(
-		"GET should fail when accessing category signed out",
-		async () => {
-			const res = await app.request("/api/item");
-			expect(res.status).toBe(401);
-		},
-	);
-
-	test.serial("GET should return items", async () => {
+	describe("GET endpoint", async () => {
 		const itemIdToGet = "item_getEndpoint123";
 
-		await itemTbHelper.add({
-			id: itemIdToGet,
-			name: "test-item-GET",
-			userIdParent: currentUserId!,
-			userIdCreator: currentUserId!,
-			categoryId: defaultCategoryId,
+		beforeAll(async () => {
+			await itemTbHelper.add({
+				id: itemIdToGet,
+				name: "test-item-GET",
+				userIdParent: currentUserId!,
+				userIdCreator: currentUserId!,
+				categoryId: defaultCategoryId,
+			});
 		});
 
-		const res = await app.request("/api/item", {
-			method: "GET",
-			headers: {
-				Cookie: cookie,
-			},
+		afterAll(async () => {
+			await itemTbHelper.clean({ itemId: itemIdToGet });
 		});
 
-		const resJson = (await res.json()) as {
-			id: string;
-			name: string;
-			sortOrder: number;
-		}[];
-		expect(resJson.length).toBe(1);
+		test.serial("should fail when accessing category signed out", async () => {
+			const res = await app.request("/api/item");
+			expect(res.status).toBe(401);
+		});
 
-		const [item] = resJson;
+		test.serial("should return items", async () => {
+			const res = await app.request("/api/item", {
+				method: "GET",
+				headers: {
+					Cookie: cookie,
+				},
+			});
 
-		expect(item?.name).toBe("test-item-GET");
-		expect(item?.id).toBe(itemIdToGet);
+			const resJson = (await res.json()) as {
+				id: string;
+				name: string;
+				sortOrder: number;
+			}[];
+			expect(resJson.length).toBe(1);
 
-		// cleanup
-		await itemTbHelper.clean({ itemId: itemIdToGet });
+			const [item] = resJson;
+
+			expect(item?.name).toBe("test-item-GET");
+			expect(item?.id).toBe(itemIdToGet);
+
+			// cleanup
+		});
 	});
 
-	test.serial(
-		"POST should return persist item with default category",
-		async () => {
+	describe("POST endpoint", () => {
+		test.serial("should persist item under default category", async () => {
 			const payload = {
 				name: "post-item",
 			};
@@ -107,67 +111,66 @@ describe("item route", () => {
 
 			// cleanup
 			await itemTbHelper.clean({ itemId: resJson.id });
-		},
-	);
-
-	test.serial("POST should fail when category is not exist", async () => {
-		const payload = {
-			name: "post-item",
-			categoryId: "not-exist-category",
-		};
-
-		const categoryRes = await app.request("/api/item", {
-			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-				Cookie: cookie,
-			},
-			body: JSON.stringify(payload),
 		});
 
-		const resJson = (await categoryRes.json()) as { message: string };
+		test.serial("should fail when category is not exist", async () => {
+			const payload = {
+				name: "post-item",
+				categoryId: "not-exist-category",
+			};
 
-		expect(categoryRes.status).toBe(403);
-		expect(resJson.message).toBe("category not exist");
-	});
+			const categoryRes = await app.request("/api/item", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					Cookie: cookie,
+				},
+				body: JSON.stringify(payload),
+			});
 
-	test.serial("POST should success with different category", async () => {
-		const mockCategory: CreateCategoryDbPayload = {
-			id: "cat_mock123",
-			name: "post-different-category",
-			userIdParent: currentUserId!,
-			userIdCreator: currentUserId!,
-		};
+			const resJson = (await categoryRes.json()) as { message: string };
 
-		await categoryTbHelper.add(mockCategory);
-
-		const payload = {
-			name: "post-item-with-different-category",
-			categoryId: "cat_mock123",
-		};
-
-		const categoryRes = await app.request("/api/item", {
-			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-				Cookie: cookie,
-			},
-			body: JSON.stringify(payload),
+			expect(categoryRes.status).toBe(403);
+			expect(resJson.message).toBe("category not exist");
 		});
 
-		const resJson = (await categoryRes.json()) as PostItemRes;
+		test.serial("should success with different category", async () => {
+			const mockCategory: CreateCategoryDbPayload = {
+				id: "cat_mock123",
+				name: "post-different-category",
+				userIdParent: currentUserId!,
+				userIdCreator: currentUserId!,
+			};
 
-		expect(categoryRes.status).toBe(201);
-		expect(resJson.categoryId).toBe("cat_mock123");
-		expect(resJson.name).toBe("post-item-with-different-category");
+			await categoryTbHelper.add(mockCategory);
 
-		await itemTbHelper.clean({ itemId: resJson.id });
-		await categoryTbHelper.clean({ categoryId: mockCategory.id });
+			const payload = {
+				name: "post-item-with-different-category",
+				categoryId: "cat_mock123",
+			};
+
+			const categoryRes = await app.request("/api/item", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					Cookie: cookie,
+				},
+				body: JSON.stringify(payload),
+			});
+
+			const resJson = (await categoryRes.json()) as PostItemRes;
+
+			expect(categoryRes.status).toBe(201);
+			expect(resJson.categoryId).toBe("cat_mock123");
+			expect(resJson.name).toBe("post-item-with-different-category");
+
+			await itemTbHelper.clean({ itemId: resJson.id });
+			await categoryTbHelper.clean({ categoryId: mockCategory.id });
+		});
 	});
 
-	test.serial(
-		"DELETE should fail when tried deleting nonexist category",
-		async () => {
+	describe("DELETE endpoint", () => {
+		test.serial("should fail when item not exist", async () => {
 			const res = await app.request("/api/item", {
 				method: "DELETE",
 				headers: {
@@ -177,137 +180,222 @@ describe("item route", () => {
 				body: JSON.stringify({ id: "notExistIdd" }),
 			});
 			expect(res.status).toBe(403);
-		},
-	);
-
-	test.serial("DELETE should fail when not a creator", async () => {
-		const newUser = await signUpSignInHelper(
-			{
-				email: "second-user@test.com",
-				name: "second-user-delete-item",
-				password: "password123!",
-			},
-			app,
-		);
-
-		await itemTbHelper.add({
-			categoryId: newUser.defaultCategoryId,
-			id: "item_123",
-			name: "new-user-item",
-			userIdCreator: newUser.id,
-			userIdParent: newUser.id,
 		});
 
-		const res = await app.request("/api/item", {
-			method: "DELETE",
-			headers: {
-				"Content-Type": "application/json",
-				Cookie: cookie,
-			},
-			body: JSON.stringify({ id: "item_123" }),
+		test.serial("should fail when not a creator", async () => {
+			const newUser = await signUpSignInHelper(
+				{
+					email: "second-user@test.com",
+					name: "second-user-delete-item",
+					password: "password123!",
+				},
+				app,
+			);
+
+			await itemTbHelper.add({
+				categoryId: newUser.defaultCategoryId,
+				id: "item_123",
+				name: "new-user-item",
+				userIdCreator: newUser.id,
+				userIdParent: newUser.id,
+			});
+
+			const res = await app.request("/api/item", {
+				method: "DELETE",
+				headers: {
+					"Content-Type": "application/json",
+					Cookie: cookie,
+				},
+				body: JSON.stringify({ id: "item_123" }),
+			});
+
+			const json = (await res.json()) as { message: string };
+			expect(res.status).toBe(403);
+			expect(json.message).toBe("user not allowed");
+
+			// cleaning up second user
+			await itemTbHelper.clean({ itemId: "item_123" });
+			await categoryTbHelper.clean({ categoryId: newUser.defaultCategoryId });
+			await authTableHelper.clean({ userId: newUser.id });
 		});
 
-		const json = (await res.json()) as { message: string };
-		expect(res.status).toBe(403);
-		expect(json.message).toBe("user not allowed");
+		test.serial("should success", async () => {
+			const itemIdToBeDeleted = "item_delete123";
 
-		// cleaning up second user
-		await itemTbHelper.clean({ itemId: "item_123" });
-		await categoryTbHelper.clean({ categoryId: newUser.defaultCategoryId });
-		await authTableHelper.clean({ userId: newUser.id });
+			await itemTbHelper.add({
+				categoryId: defaultCategoryId,
+				id: itemIdToBeDeleted,
+				name: "new-user-item",
+				userIdCreator: currentUserId!,
+				userIdParent: currentUserId!,
+			});
+
+			const res = await app.request("/api/item", {
+				method: "DELETE",
+				headers: {
+					"Content-Type": "application/json",
+					Cookie: cookie,
+				},
+				body: JSON.stringify({ id: itemIdToBeDeleted }),
+			});
+
+			expect(res.status).toBe(200);
+
+			const itemToDelete = await itemTbHelper.findById(itemIdToBeDeleted);
+			console.log(itemIdToBeDeleted);
+
+			expect(itemToDelete.length).toBe(0);
+		});
 	});
 
-	test.serial("DELETE should success", async () => {
-		const itemIdToBeDeleted = "item_delete123";
+	describe("PATCH endpoint", () => {
+		test.serial("PATCH should success", async () => {
+			await categoryTbHelper.add({
+				id: "cat_for-item-patch123",
+				name: "category for item patch",
+				userIdCreator: currentUserId!,
+				userIdParent: currentUserId!,
+			});
 
-		await itemTbHelper.add({
-			categoryId: defaultCategoryId,
-			id: itemIdToBeDeleted,
-			name: "new-user-item",
-			userIdCreator: currentUserId!,
-			userIdParent: currentUserId!,
-		});
+			const itemIdTobeUpdate = "item_patch123";
 
-		const res = await app.request("/api/item", {
-			method: "DELETE",
-			headers: {
-				"Content-Type": "application/json",
-				Cookie: cookie,
-			},
-			body: JSON.stringify({ id: itemIdToBeDeleted }),
-		});
-
-		expect(res.status).toBe(200);
-
-		const itemToDelete = await itemTbHelper.findById(itemIdToBeDeleted);
-		console.log(itemIdToBeDeleted);
-
-		expect(itemToDelete.length).toBe(0);
-	});
-
-	test.serial("PATCH should success", async () => {
-		await categoryTbHelper.add({
-			id: "cat_for-item-patch123",
-			name: "category for item patch",
-			userIdCreator: currentUserId!,
-			userIdParent: currentUserId!,
-		});
-
-		const itemIdTobeUpdate = "item_patch123";
-
-		await itemTbHelper.add({
-			categoryId: defaultCategoryId,
-			id: itemIdTobeUpdate,
-			name: "user-item",
-			userIdCreator: currentUserId!,
-			userIdParent: currentUserId!,
-		});
-
-		const res = await app.request("/api/item", {
-			method: "PATCH",
-			headers: {
-				"Content-Type": "application/json",
-				Cookie: cookie,
-			},
-			body: JSON.stringify({
+			await itemTbHelper.add({
+				categoryId: defaultCategoryId,
 				id: itemIdTobeUpdate,
-				name: "new-name-user-item",
-				categoryId: "cat_for-item-patch123",
-			}),
+				name: "user-item",
+				userIdCreator: currentUserId!,
+				userIdParent: currentUserId!,
+			});
+
+			const res = await app.request("/api/item", {
+				method: "PATCH",
+				headers: {
+					"Content-Type": "application/json",
+					Cookie: cookie,
+				},
+				body: JSON.stringify({
+					id: itemIdTobeUpdate,
+					name: "new-name-user-item",
+					categoryId: "cat_for-item-patch123",
+				}),
+			});
+
+			expect(res.status).toBe(200);
+
+			const updatedItem = await itemTbHelper.findById(itemIdTobeUpdate);
+			expect(updatedItem[0]?.name).toBe("new-name-user-item");
+			expect(updatedItem[0]?.categoryId).toBe("cat_for-item-patch123");
+
+			await itemTbHelper.clean({ itemId: itemIdTobeUpdate });
+			await categoryTbHelper.clean({ categoryId: "cat_for-item-patch123" });
 		});
 
-		expect(res.status).toBe(200);
+		test.serial("PATCH should fail when no data is provided", async () => {
+			const itemIdTobeUpdate = "item_patch-fail-123";
 
-		const updatedItem = await itemTbHelper.findById(itemIdTobeUpdate);
-		expect(updatedItem[0]?.name).toBe("new-name-user-item");
-		expect(updatedItem[0]?.categoryId).toBe("cat_for-item-patch123");
+			await itemTbHelper.add({
+				categoryId: defaultCategoryId,
+				id: itemIdTobeUpdate,
+				name: "user-item",
+				userIdCreator: currentUserId!,
+				userIdParent: currentUserId!,
+			});
 
-		await itemTbHelper.clean({ itemId: itemIdTobeUpdate });
-		await categoryTbHelper.clean({ categoryId: "cat_for-item-patch123" });
+			const res = await app.request("/api/item", {
+				method: "PATCH",
+				headers: {
+					"Content-Type": "application/json",
+					Cookie: cookie,
+				},
+				body: JSON.stringify({
+					id: itemIdTobeUpdate,
+				}),
+			});
+			expect(res.status).toBe(400);
+			await itemTbHelper.clean({ itemId: itemIdTobeUpdate });
+		});
 	});
 
-	test.serial("PATCH should fail when no data is provided", async () => {
-		const itemIdTobeUpdate = "item_patch-fail-123";
+	describe("PATCH sort-order endpoint", () => {
+		test("should fail with invalid categoryID", async () => {
+			const payload: UpdateItemsSortOrderPayload = {
+				categoryId: "cat_invalid",
+				itemIdsNewOrder: ["invalid"],
+			};
 
-		await itemTbHelper.add({
-			categoryId: defaultCategoryId,
-			id: itemIdTobeUpdate,
-			name: "user-item",
-			userIdCreator: currentUserId!,
-			userIdParent: currentUserId!,
+			const res = await app.request("/api/item/sort-order", {
+				method: "PATCH",
+				headers: {
+					"Content-Type": "application/json",
+					Cookie: cookie,
+				},
+				body: JSON.stringify(payload),
+			});
+			expect(res.status).toBe(404);
+
+			const json = (await res.json()) as { message: string };
+
+			expect(json.message).toBe("category not found");
 		});
 
-		const res = await app.request("/api/item", {
-			method: "PATCH",
-			headers: {
-				"Content-Type": "application/json",
-				Cookie: cookie,
-			},
-			body: JSON.stringify({
-				id: itemIdTobeUpdate,
-			}),
+		test("should success", async () => {
+			await Promise.all([
+				itemTbHelper.add({
+					categoryId: defaultCategoryId!,
+					id: "item_order-000",
+					name: "item #1",
+					userIdCreator: currentUserId!,
+					userIdParent: currentUserId!,
+					sortOrder: 0,
+				}),
+				itemTbHelper.add({
+					categoryId: defaultCategoryId!,
+					id: "item_order-001",
+					name: "item #1",
+					userIdCreator: currentUserId!,
+					userIdParent: currentUserId!,
+					sortOrder: 1,
+				}),
+				itemTbHelper.add({
+					categoryId: defaultCategoryId!,
+					id: "item_order-002",
+					name: "item #1",
+					userIdCreator: currentUserId!,
+					userIdParent: currentUserId!,
+					sortOrder: 2,
+				}),
+			]);
+
+			const payload: UpdateItemsSortOrderPayload = {
+				categoryId: defaultCategoryId!,
+				itemIdsNewOrder: ["item_order-001", "item_order-002", "item_order-000"],
+			};
+
+			const res = await app.request("/api/item/sort-order", {
+				method: "PATCH",
+				headers: {
+					"Content-Type": "application/json",
+					Cookie: cookie,
+				},
+				body: JSON.stringify(payload),
+			});
+			expect(res.status).toBe(200);
+
+			const [[item001], [item000], [item002]] = await Promise.all([
+				itemTbHelper.findById("item_order-001"),
+				itemTbHelper.findById("item_order-000"),
+				itemTbHelper.findById("item_order-002"),
+			]);
+
+			expect(item001?.sortOrder).toBe(0);
+			expect(item002?.sortOrder).toBe(1);
+			expect(item000?.sortOrder).toBe(2);
+
+			await Promise.all([
+				itemTbHelper.clean({ itemId: "item_order-000" }),
+				itemTbHelper.clean({ itemId: "item_order-001" }),
+				itemTbHelper.clean({ itemId: "item_order-002" }),
+			]);
 		});
-		expect(res.status).toBe(400);
-		await itemTbHelper.clean({ itemId: itemIdTobeUpdate });
 	});
 });

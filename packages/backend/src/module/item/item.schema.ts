@@ -27,6 +27,7 @@ export type UpdateItemPayload = z.infer<typeof updateItemSchema>;
 
 export const updateItemsSortOrderSchema = z.object({
 	itemIdsNewOrder: z.array(z.string()),
+	categoryId: z.string(),
 });
 
 export type UpdateItemsSortOrderPayload = z.infer<

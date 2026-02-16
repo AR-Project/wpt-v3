@@ -6,6 +6,7 @@ import { eq, inArray, sql, type SQL } from "drizzle-orm";
 import type { ProtectedType } from "@lib/auth";
 import { generateId } from "@/lib/idGenerator";
 import { zValidator } from "@/lib/validator-wrapper";
+import { arraysHaveEqualElements } from "@/lib/utils/array-validator";
 
 import { db } from "@/db";
 import { item, type CreateItemDbPayload } from "@/db/schema/item.schema";
@@ -48,19 +49,39 @@ export const itemRoute = new Hono<{ Variables: ProtectedType }>({
 		};
 
 		const [createdItem] = await db.transaction(async (tx) => {
+			let sortOrder: number = 0;
+
 			if (categoryId) {
 				const categoryExist = await tx.query.category.findFirst({
 					where: (ctg, { eq }) => eq(ctg.id, categoryId),
+					with: {
+						items: true,
+					},
 				});
 				if (!categoryExist)
 					throw new HTTPException(403, { message: "category not exist" });
+				sortOrder = categoryExist.items.length;
+			} else {
+				const defaultCategory = await tx.query.category.findFirst({
+					where: (category, { eq }) => eq(category.id, user.defaultCategoryId),
+					with: {
+						items: true,
+					},
+				});
+
+				if (!defaultCategory)
+					throw new HTTPException(500, { message: "this should never throw" });
+				sortOrder = defaultCategory.items.length;
 			}
 
-			return await tx.insert(item).values(dbPayload).returning({
-				id: item.id,
-				name: item.name,
-				categoryId: item.categoryId,
-			});
+			return await tx
+				.insert(item)
+				.values({ ...dbPayload, sortOrder })
+				.returning({
+					id: item.id,
+					name: item.name,
+					categoryId: item.categoryId,
+				});
 		});
 
 		return c.json(createdItem, 201);
@@ -103,40 +124,44 @@ export const itemRoute = new Hono<{ Variables: ProtectedType }>({
 
 		return c.json({ message: "ok" }, 200);
 	})
-
 	.patch(
 		"/sort-order",
 		zValidator("json", updateItemsSortOrderSchema),
 		async (c) => {
-			const { itemIdsNewOrder } = c.req.valid("json");
+			const { itemIdsNewOrder, categoryId: categoryIdToUpdate } =
+				c.req.valid("json");
 			const user = c.get("user");
 
 			await db.transaction(async (tx) => {
-				const itemsToUpdate = await tx.query.item.findMany({
-					where: (item, { inArray }) => inArray(item.id, itemIdsNewOrder),
+				const categoryWithItems = await tx.query.category.findFirst({
+					where: (category, { eq }) => eq(category.id, categoryIdToUpdate),
+					with: {
+						items: {
+							columns: {
+								id: true,
+							},
+							orderBy: (item, { asc }) => asc(item.sortOrder),
+						},
+					},
 				});
 
-				if (itemsToUpdate.length !== itemIdsNewOrder.length)
-					throw new HTTPException(400, { message: "item id(s) invalid" });
+				if (!categoryWithItems)
+					throw new HTTPException(404, { message: "category not found" });
 
-				const categoryIdRef = itemsToUpdate[0]?.userIdParent;
+				if (user.parentId !== categoryWithItems.userIdParent)
+					throw new HTTPException(403, { message: "user not allowed" });
 
-				for (let i = 0; i < itemsToUpdate.length; i++) {
-					const element = itemsToUpdate[i];
-					// Only allow items from same category AND items under same parent
-					if (
-						element?.categoryId !== categoryIdRef ||
-						element?.userIdParent !== user.parentId
-					)
-						throw new HTTPException(403, {
-							message: "items not from same category and / or parent Id",
-						});
-				}
+				const itemIdsOldOrder = categoryWithItems.items.map((item) => item.id);
+
+				if (arraysHaveEqualElements(itemIdsOldOrder, itemIdsNewOrder) === false)
+					throw new HTTPException(400, {
+						message: "item id(s) different from category",
+					});
 
 				const sqlChunks: SQL[] = [];
 				sqlChunks.push(sql`(case`);
 				itemIdsNewOrder.forEach((id, index) => {
-					sqlChunks.push(sql`when ${item.id} = ${id} then ${index}::INTEGER`);
+					sqlChunks.push(sql`when ${item.id} = ${id} then ${index}`);
 				});
 				sqlChunks.push(sql`end)`);
 				const finalSql: SQL = sql.join(sqlChunks, sql.raw(" "));
