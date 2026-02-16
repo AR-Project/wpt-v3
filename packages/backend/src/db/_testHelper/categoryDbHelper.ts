@@ -1,7 +1,10 @@
 import { eq, or } from "drizzle-orm";
 
 import { db } from "@db/index";
-import { category } from "../schema/category.schema";
+import {
+	category,
+	type CreateCategoryDbPayload,
+} from "../schema/category.schema";
 
 type CleanOption = {
 	userId?: string | null;
@@ -9,6 +12,12 @@ type CleanOption = {
 };
 
 export const categoryTbHelper = {
+	add: async (payload: CreateCategoryDbPayload) => {
+		return await db
+			.insert(category)
+			.values(payload)
+			.returning({ id: category.id, name: category.name });
+	},
 	find: async (userId: string) => {
 		return await db.query.category.findMany({
 			where: (category, { eq, or }) =>
