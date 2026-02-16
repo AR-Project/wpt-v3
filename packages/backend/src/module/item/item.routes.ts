@@ -11,6 +11,7 @@ import { item, type CreateItemDbPayload } from "@/db/schema/item.schema";
 
 import { authProtectedMiddleware } from "@/middleware/auth.middleware";
 import { createItemSchema } from "./item.schema";
+import { eq } from "drizzle-orm";
 
 export const itemRoute = new Hono<{ Variables: ProtectedType }>({
 	strict: false,
@@ -30,35 +31,50 @@ export const itemRoute = new Hono<{ Variables: ProtectedType }>({
 		return c.json(items);
 	})
 	.post("/", zValidator("json", createItemSchema), async (c) => {
-		const payload = c.req.valid("json");
+		const { name, categoryId } = c.req.valid("json");
 		const user = c.get("user");
 
 		const dbPayload: CreateItemDbPayload = {
 			id: `cat_${generateId(10)}`,
-			name: payload.name,
-			categoryId: payload.categoryId
-				? payload.categoryId
-				: user.defaultCategoryId,
+			name: name,
+			categoryId: categoryId ? categoryId : user.defaultCategoryId,
 			userIdParent: user.parentId,
 			userIdCreator: user.id,
 		};
 
 		const [createdItem] = await db.transaction(async (tx) => {
-			return await tx
-				.insert(item)
-				.values(dbPayload)
-				.returning({ id: item.id, name: item.name });
+			if (categoryId) {
+				const categoryExist = await tx.query.category.findFirst({
+					where: (ctg, { eq }) => eq(ctg.id, categoryId),
+				});
+				if (!categoryExist)
+					throw new HTTPException(403, { message: "category not exist" });
+			}
+
+			return await tx.insert(item).values(dbPayload).returning({
+				id: item.id,
+				name: item.name,
+				categoryId: item.categoryId,
+			});
 		});
 
 		return c.json(createdItem, 201);
 	})
 	.delete("/", zValidator("json", z.object({ id: z.string() })), async (c) => {
 		const payload = c.req.valid("json");
+		const user = c.get("user");
 
 		await db.transaction(async (tx) => {
 			const itemToDelete = await tx.query.item.findFirst({
 				where: (item, { eq }) => eq(item.id, payload.id),
 			});
-			if (!itemToDelete) throw new HTTPException(403);
+			if (!itemToDelete)
+				throw new HTTPException(403, { message: "item not exist" });
+			if (itemToDelete.userIdCreator !== user.id)
+				throw new HTTPException(403, { message: "user not allowed" });
+
+			await tx.delete(item).where(eq(item.id, payload.id));
 		});
+
+		return c.json({ message: "ok" }, 200);
 	});

@@ -1,190 +1,244 @@
-import {
-  afterAll,
-  afterEach,
-  beforeAll,
-  describe,
-  expect,
-  test,
-} from "bun:test";
+import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 
 import { app } from "@/main";
 import { authTableHelper } from "@/db/_testHelper/authDbHelper";
 import { signUpSignInHelper } from "../auth/auth.routes.test.helper";
 import { itemTbHelper } from "@/db/_testHelper/itemDbHelper";
+import { categoryTbHelper } from "@/db/_testHelper/categoryDbHelper";
+import type { CreateCategoryDbPayload } from "@/db/schema/category.schema";
 
-
+type PostItemRes = {
+	id: string;
+	name: string;
+	categoryId: string;
+};
 
 describe("item route", () => {
-  let currentUserId: string | null = "";
-  let cookie: string = "";
-  let defaultCategoryId: string = ""
+	let currentUserId: string | null = "";
+	let cookie: string = "";
+	let defaultCategoryId: string = "";
 
+	beforeAll(async () => {
+		const testUser = {
+			email: "item@test.com",
+			password: "Password123!",
+			name: "test-user-item",
+		};
 
-  beforeAll(async () => {
-    const testUser = {
-      email: "item@test.com",
-      password: "Password123!",
-      name: "test-user-item",
-    };
+		const userData = await signUpSignInHelper(testUser, app);
+		cookie = userData.cookie;
+		currentUserId = userData.id;
+		defaultCategoryId = userData.defaultCategoryId;
+	});
 
-    const userData = await signUpSignInHelper(testUser, app);
-    cookie = userData.cookie;
-    currentUserId = userData.id;
-    defaultCategoryId = userData.defaultCategoryId
-  });
+	afterAll(async () => {
+		await categoryTbHelper.clean({ userId: currentUserId });
+		await authTableHelper.clean({ userId: currentUserId });
+	});
 
-  afterEach(async () => {
-    await itemTbHelper.clean({ userId: currentUserId })
-  });
+	test.serial(
+		"GET should fail when accessing category signed out",
+		async () => {
+			const res = await app.request("/api/item");
+			expect(res.status).toBe(401);
+		},
+	);
 
-  afterAll(async () => {
-    await authTableHelper.clean({ userId: currentUserId });
-  });
+	test.serial("GET should return items", async () => {
+		const itemIdToGet = "item_getEndpoint123";
 
-  test("GET should fail when accessing category signed out", async () => {
-    const res = await app.request("/api/item");
-    expect(res.status).toBe(401);
-  });
+		await itemTbHelper.add({
+			id: itemIdToGet,
+			name: "test-item-GET",
+			userIdParent: currentUserId!,
+			userIdCreator: currentUserId!,
+			categoryId: defaultCategoryId,
+		});
 
-  test("GET should return default category after signin up", async () => {
-    await itemTbHelper.add({
-      id: "item-123",
-      name: "test-item-GET",
-      userIdParent: currentUserId!,
-      userIdCreator: currentUserId!,
-      categoryId: defaultCategoryId
-    })
+		const res = await app.request("/api/item", {
+			method: "GET",
+			headers: {
+				Cookie: cookie,
+			},
+		});
 
-    const res = await app.request("/api/item", {
-      method: "GET",
-      headers: {
-        Cookie: cookie,
-      },
-    });
+		const resJson = (await res.json()) as {
+			id: string;
+			name: string;
+			sortOrder: number;
+		}[];
+		expect(resJson.length).toBe(1);
 
-    const resJson = (await res.json()) as {
-      id: string;
-      name: string;
-      sortOrder: number;
-    }[];
-    expect(resJson.length).toBe(1)
+		const [item] = resJson;
 
-    const [item] = resJson
+		expect(item?.name).toBe("test-item-GET");
+		expect(item?.id).toBe(itemIdToGet);
 
-    expect(item?.name).toBe("test-item-GET")
-    expect(item?.id).toBe("item-123")
+		// cleanup
+		await itemTbHelper.clean({ itemId: itemIdToGet });
+	});
 
-  });
+	test.serial(
+		"POST should return persist item with default category",
+		async () => {
+			const payload = {
+				name: "post-item",
+			};
 
-  /** ------------------------
+			const categoryRes = await app.request("/api/item", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					Cookie: cookie,
+				},
+				body: JSON.stringify(payload),
+			});
 
-  test('POST should return id and persist category with correct payload ', async () => {
-    const payload = {
-      name: "post-category"
-    }
+			const resJson = (await categoryRes.json()) as PostItemRes;
 
-    const categoryRes = await app.request("/api/category", {
-      method: "POST",
-      headers: {
-        'Content-Type': 'application/json',
-        Cookie: cookie,
-      },
-      body: JSON.stringify(payload),
-    });
+			expect(categoryRes.status).toBe(201);
 
-    const resJson = (await categoryRes.json()) as {
-      id: string;
-      name: string;
-    };
+			expect(resJson.id).toBeDefined();
+			expect(resJson.name).toBe("post-item");
+			expect(resJson.categoryId).toBe(defaultCategoryId);
 
-    expect(categoryRes.status).toBe(201)
+			// cleanup
+			await itemTbHelper.clean({ itemId: resJson.id });
+		},
+	);
 
-    expect(resJson.id).toBeDefined()
-    expect(resJson.name).toBe("post-category")
+	test.serial("POST should fail when category is not exist", async () => {
+		const payload = {
+			name: "post-item",
+			categoryId: "not-exist-category",
+		};
 
-    await categoryTbHelper.clean({ categoryId: resJson.id })
+		const categoryRes = await app.request("/api/item", {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+				Cookie: cookie,
+			},
+			body: JSON.stringify(payload),
+		});
 
-  });
+		const resJson = (await categoryRes.json()) as { message: string };
 
-  test('POST should fail with incorrect payload ', async () => {
-    const payload = {
-      name: "a"
-    }
+		expect(categoryRes.status).toBe(403);
+		expect(resJson.message).toBe("category not exist");
+	});
 
-    const categoryRes = await app.request("/api/category", {
-      method: "POST",
-      headers: {
-        'Content-Type': 'application/json',
-        Cookie: cookie,
-      },
-      body: JSON.stringify(payload),
-    });
+	test.serial("POST should success with different category", async () => {
+		const mockCategory: CreateCategoryDbPayload = {
+			id: "cat_mock123",
+			name: "post-different-category",
+			userIdParent: currentUserId!,
+			userIdCreator: currentUserId!,
+		};
 
-    expect(categoryRes.status).toBe(400);
+		await categoryTbHelper.add(mockCategory);
 
-  });
+		const payload = {
+			name: "post-item-with-different-category",
+			categoryId: "cat_mock123",
+		};
 
-  test('DELETE should fail when tried deleting nonexist category', async () => {
+		const categoryRes = await app.request("/api/item", {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+				Cookie: cookie,
+			},
+			body: JSON.stringify(payload),
+		});
 
-    const res = await app.request("/api/category", {
-      method: "DELETE",
-      headers: {
-        'Content-Type': 'application/json',
-        Cookie: cookie,
-      },
-      body: JSON.stringify({ id: "notExistIdd" }),
-    });
-    expect(res.status).toBe(403)
-  })
+		const resJson = (await categoryRes.json()) as PostItemRes;
 
-  test('DELETE should fail when tried deleting default category', async () => {
+		expect(categoryRes.status).toBe(201);
+		expect(resJson.categoryId).toBe("cat_mock123");
+		expect(resJson.name).toBe("post-item-with-different-category");
 
-    const user = await authTableHelper.findById(currentUserId!)
+		await itemTbHelper.clean({ itemId: resJson.id });
+		await categoryTbHelper.clean({ categoryId: mockCategory.id });
+	});
 
-    const res = await app.request("/api/category", {
-      method: "DELETE",
-      headers: {
-        'Content-Type': 'application/json',
-        Cookie: cookie,
-      },
-      body: JSON.stringify({ id: user[0]?.defaultCategoryId }),
-    });
-    expect(res.status).toBe(403)
+	test.serial(
+		"DELETE should fail when tried deleting nonexist category",
+		async () => {
+			const res = await app.request("/api/item", {
+				method: "DELETE",
+				headers: {
+					"Content-Type": "application/json",
+					Cookie: cookie,
+				},
+				body: JSON.stringify({ id: "notExistIdd" }),
+			});
+			expect(res.status).toBe(403);
+		},
+	);
 
-  })
+	test.serial("DELETE should fail when not a creator", async () => {
+		const newUser = await signUpSignInHelper(
+			{
+				email: "second-user@test.com",
+				name: "second-user-delete-item",
+				password: "password123!",
+			},
+			app,
+		);
 
-  test('DELETE should success', async () => {
-    const payload = {
-      name: "delete-category"
-    }
+		await itemTbHelper.add({
+			categoryId: newUser.defaultCategoryId,
+			id: "item_123",
+			name: "new-user-item",
+			userIdCreator: newUser.id,
+			userIdParent: newUser.id,
+		});
 
-    const postRes = await app.request("/api/category", {
-      method: "POST",
-      headers: {
-        'Content-Type': 'application/json',
-        Cookie: cookie,
-      },
-      body: JSON.stringify(payload),
-    });
+		const res = await app.request("/api/item", {
+			method: "DELETE",
+			headers: {
+				"Content-Type": "application/json",
+				Cookie: cookie,
+			},
+			body: JSON.stringify({ id: "item_123" }),
+		});
 
-    const postResJson = (await postRes.json()) as {
-      id: string;
-      name: string;
-    };
+		const json = (await res.json()) as { message: string };
+		expect(res.status).toBe(403);
+		expect(json.message).toBe("user not allowed");
 
-    const res = await app.request("/api/category", {
-      method: "DELETE",
-      headers: {
-        'Content-Type': 'application/json',
-        Cookie: cookie,
-      },
-      body: JSON.stringify({ id: postResJson.id }),
-    });
+		// cleaning up second user
+		await itemTbHelper.clean({ itemId: "item_123" });
+		await categoryTbHelper.clean({ categoryId: newUser.defaultCategoryId });
+		await authTableHelper.clean({ userId: newUser.id });
+	});
 
-    expect(res.status).toBe(200)
+	test.serial("DELETE should success", async () => {
+		const itemIdToBeDeleted = "item_delete123";
 
-  })
+		await itemTbHelper.add({
+			categoryId: defaultCategoryId,
+			id: itemIdToBeDeleted,
+			name: "new-user-item",
+			userIdCreator: currentUserId!,
+			userIdParent: currentUserId!,
+		});
 
-   --------------------------   */
+		const res = await app.request("/api/item", {
+			method: "DELETE",
+			headers: {
+				"Content-Type": "application/json",
+				Cookie: cookie,
+			},
+			body: JSON.stringify({ id: itemIdToBeDeleted }),
+		});
 
+		expect(res.status).toBe(200);
+
+		const itemToDelete = await itemTbHelper.findById(itemIdToBeDeleted);
+		console.log(itemIdToBeDeleted);
+
+		expect(itemToDelete.length).toBe(0);
+	});
 });
