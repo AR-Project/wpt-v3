@@ -32,6 +32,9 @@ describe("item route", () => {
 	});
 
 	afterAll(async () => {
+		// just to make sure clean table after this file test
+		await itemTbHelper.clean({ userId: currentUserId });
+
 		await categoryTbHelper.clean({ userId: currentUserId });
 		await authTableHelper.clean({ userId: currentUserId });
 	});
@@ -240,5 +243,71 @@ describe("item route", () => {
 		console.log(itemIdToBeDeleted);
 
 		expect(itemToDelete.length).toBe(0);
+	});
+
+	test.serial("PATCH should success", async () => {
+		await categoryTbHelper.add({
+			id: "cat_for-item-patch123",
+			name: "category for item patch",
+			userIdCreator: currentUserId!,
+			userIdParent: currentUserId!,
+		});
+
+		const itemIdTobeUpdate = "item_patch123";
+
+		await itemTbHelper.add({
+			categoryId: defaultCategoryId,
+			id: itemIdTobeUpdate,
+			name: "user-item",
+			userIdCreator: currentUserId!,
+			userIdParent: currentUserId!,
+		});
+
+		const res = await app.request("/api/item", {
+			method: "PATCH",
+			headers: {
+				"Content-Type": "application/json",
+				Cookie: cookie,
+			},
+			body: JSON.stringify({
+				id: itemIdTobeUpdate,
+				name: "new-name-user-item",
+				categoryId: "cat_for-item-patch123",
+			}),
+		});
+
+		expect(res.status).toBe(200);
+
+		const updatedItem = await itemTbHelper.findById(itemIdTobeUpdate);
+		expect(updatedItem[0]?.name).toBe("new-name-user-item");
+		expect(updatedItem[0]?.categoryId).toBe("cat_for-item-patch123");
+
+		await itemTbHelper.clean({ itemId: itemIdTobeUpdate });
+		await categoryTbHelper.clean({ categoryId: "cat_for-item-patch123" });
+	});
+
+	test.serial("PATCH should fail when no data is provided", async () => {
+		const itemIdTobeUpdate = "item_patch-fail-123";
+
+		await itemTbHelper.add({
+			categoryId: defaultCategoryId,
+			id: itemIdTobeUpdate,
+			name: "user-item",
+			userIdCreator: currentUserId!,
+			userIdParent: currentUserId!,
+		});
+
+		const res = await app.request("/api/item", {
+			method: "PATCH",
+			headers: {
+				"Content-Type": "application/json",
+				Cookie: cookie,
+			},
+			body: JSON.stringify({
+				id: itemIdTobeUpdate,
+			}),
+		});
+		expect(res.status).toBe(400);
+		await itemTbHelper.clean({ itemId: itemIdTobeUpdate });
 	});
 });

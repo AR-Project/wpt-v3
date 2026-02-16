@@ -1,17 +1,22 @@
 import { Hono } from "hono";
-import { zValidator } from "@hono/zod-validator";
-import { HTTPException } from "hono/http-exception";
 import z from "zod";
+import { HTTPException } from "hono/http-exception";
+import { eq, inArray, sql, type SQL } from "drizzle-orm";
 
 import type { ProtectedType } from "@lib/auth";
 import { generateId } from "@/lib/idGenerator";
+import { zValidator } from "@/lib/validator-wrapper";
 
 import { db } from "@/db";
 import { item, type CreateItemDbPayload } from "@/db/schema/item.schema";
 
 import { authProtectedMiddleware } from "@/middleware/auth.middleware";
-import { createItemSchema } from "./item.schema";
-import { eq } from "drizzle-orm";
+
+import {
+	createItemSchema,
+	updateItemSchema,
+	updateItemsSortOrderSchema,
+} from "./item.schema";
 
 export const itemRoute = new Hono<{ Variables: ProtectedType }>({
 	strict: false,
@@ -77,4 +82,71 @@ export const itemRoute = new Hono<{ Variables: ProtectedType }>({
 		});
 
 		return c.json({ message: "ok" }, 200);
-	});
+	})
+	.patch("/", zValidator("json", updateItemSchema), async (c) => {
+		const { id, ...dataToUpdate } = c.req.valid("json");
+		const user = c.get("user");
+
+		await db.transaction(async (tx) => {
+			const itemToUpdate = await tx.query.item.findFirst({
+				where: (item, { eq }) => eq(item.id, id),
+			});
+			if (!itemToUpdate)
+				throw new HTTPException(403, { message: "item not exist" });
+
+			// only the creator itself can update the item, not allowed to update parent item OR siblings item.
+			if (itemToUpdate.userIdCreator !== user.id)
+				throw new HTTPException(403, { message: "user not allowed" });
+
+			await tx.update(item).set(dataToUpdate).where(eq(item.id, id));
+		});
+
+		return c.json({ message: "ok" }, 200);
+	})
+
+	.patch(
+		"/sort-order",
+		zValidator("json", updateItemsSortOrderSchema),
+		async (c) => {
+			const { itemIdsNewOrder } = c.req.valid("json");
+			const user = c.get("user");
+
+			await db.transaction(async (tx) => {
+				const itemsToUpdate = await tx.query.item.findMany({
+					where: (item, { inArray }) => inArray(item.id, itemIdsNewOrder),
+				});
+
+				if (itemsToUpdate.length !== itemIdsNewOrder.length)
+					throw new HTTPException(400, { message: "item id(s) invalid" });
+
+				const categoryIdRef = itemsToUpdate[0]?.userIdParent;
+
+				for (let i = 0; i < itemsToUpdate.length; i++) {
+					const element = itemsToUpdate[i];
+					// Only allow items from same category AND items under same parent
+					if (
+						element?.categoryId !== categoryIdRef ||
+						element?.userIdParent !== user.parentId
+					)
+						throw new HTTPException(403, {
+							message: "items not from same category and / or parent Id",
+						});
+				}
+
+				const sqlChunks: SQL[] = [];
+				sqlChunks.push(sql`(case`);
+				itemIdsNewOrder.forEach((id, index) => {
+					sqlChunks.push(sql`when ${item.id} = ${id} then ${index}::INTEGER`);
+				});
+				sqlChunks.push(sql`end)`);
+				const finalSql: SQL = sql.join(sqlChunks, sql.raw(" "));
+
+				await tx
+					.update(item)
+					.set({ sortOrder: finalSql })
+					.where(inArray(item.id, itemIdsNewOrder));
+			});
+
+			return c.json({ message: "ok" }, 200);
+		},
+	);
