@@ -9,7 +9,10 @@ import {
 
 import { app } from "@/main";
 import { authTableHelper } from "@/db/_testHelper/authDbHelper";
-import { signUpSignInHelper } from "../auth/auth.routes.test.helper";
+import {
+	signUpHelper,
+	signUpSignInHelper,
+} from "../auth/auth.routes.test.helper";
 
 import * as vendorTbHelper from "@db/_testHelper/vendor.tableHelper";
 
@@ -36,12 +39,12 @@ describe("vendor route", () => {
 		await authTableHelper.clean({ userId: currentUserId });
 	});
 	describe("GET", () => {
-		test("should prevent access without user", async () => {
+		test.serial("should prevent access without user", async () => {
 			const profileRes = await app.request("/api/vendor");
 			expect(profileRes.status).toBe(401);
 		});
 
-		test("should return vendor list", async () => {
+		test.serial("should return vendor list", async () => {
 			await vendorTbHelper.add({
 				id: "vendor_GET",
 				name: "vendor_GET",
@@ -71,7 +74,7 @@ describe("vendor route", () => {
 	});
 
 	describe("POST", () => {
-		test("should persist vendor ", async () => {
+		test.serial("should persist vendor ", async () => {
 			const payload = {
 				name: "post-vendor",
 			};
@@ -98,7 +101,7 @@ describe("vendor route", () => {
 			await vendorTbHelper.clean({ vendorId: resJson.id });
 		});
 
-		test("should reject incorrect payload ", async () => {
+		test.serial("should reject incorrect payload ", async () => {
 			const payload = { id: "bsca" };
 			const categoryRes = await app.request("/api/vendor", {
 				method: "POST",
@@ -113,66 +116,83 @@ describe("vendor route", () => {
 		});
 	});
 
+	describe("DELETE", () => {
+		test.serial("should success", async () => {
+			await vendorTbHelper.add({
+				id: "vendor_delete123",
+				name: "vendor_delete123",
+				userIdParent: currentUserId,
+				userIdCreator: currentUserId,
+			});
+
+			const res = await app.request("/api/vendor", {
+				method: "DELETE",
+				headers: {
+					"Content-Type": "application/json",
+					Cookie: cookie,
+				},
+				body: JSON.stringify({ id: "vendor_delete123" }),
+			});
+
+			expect(res.status).toBe(200);
+
+			const vendor = await vendorTbHelper.findById("vendor_delete123");
+			expect(vendor.length).toBe(0);
+
+			await vendorTbHelper.clean({ vendorId: "vendor_delete123" });
+		});
+
+		test.serial("should reject nonexist category", async () => {
+			const res = await app.request("/api/vendor", {
+				method: "DELETE",
+				headers: {
+					"Content-Type": "application/json",
+					Cookie: cookie,
+				},
+				body: JSON.stringify({ id: "notExistIdd" }),
+			});
+			expect(res.status).toBe(404);
+		});
+
+		test.serial("should reject other user's vendorId", async () => {
+			const mockUser = await signUpHelper(
+				{
+					email: "delete-mock-user@test.com",
+					name: "delete-mock-user",
+					password: "password123!",
+				},
+				app,
+			);
+
+			await vendorTbHelper.add({
+				id: "vendor_mock-user-delete",
+				name: "vendor_mock-user-delete",
+				userIdParent: mockUser.user.id,
+				userIdCreator: mockUser.user.id,
+			});
+
+			const res = await app.request("/api/vendor", {
+				method: "DELETE",
+				headers: {
+					"Content-Type": "application/json",
+					Cookie: cookie,
+				},
+				body: JSON.stringify({ id: "vendor_mock-user-delete" }),
+			});
+
+			const json = (await res.json()) as { message: string };
+
+			expect(res.status).toBe(403);
+			expect(json.message).toBe("user not allowed");
+
+			await vendorTbHelper.clean({ vendorId: "vendor_mock-user-delete" });
+			await authTableHelper.clean({ userId: mockUser.user.id });
+		});
+	});
+
 	/**
 
   
-
-  test("DELETE should fail when tried deleting nonexist category", async () => {
-    const res = await app.request("/api/category", {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-        Cookie: cookie,
-      },
-      body: JSON.stringify({ id: "notExistIdd" }),
-    });
-    expect(res.status).toBe(403);
-  });
-
-  test("DELETE should fail when tried deleting default category", async () => {
-    const user = await authTableHelper.findById(currentUserId!);
-
-    const res = await app.request("/api/category", {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-        Cookie: cookie,
-      },
-      body: JSON.stringify({ id: user[0]?.defaultCategoryId }),
-    });
-    expect(res.status).toBe(403);
-  });
-
-  test("DELETE should success", async () => {
-    const payload = {
-      name: "delete-category",
-    };
-
-    const postRes = await app.request("/api/category", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Cookie: cookie,
-      },
-      body: JSON.stringify(payload),
-    });
-
-    const postResJson = (await postRes.json()) as {
-      id: string;
-      name: string;
-    };
-
-    const res = await app.request("/api/category", {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-        Cookie: cookie,
-      },
-      body: JSON.stringify({ id: postResJson.id }),
-    });
-
-    expect(res.status).toBe(200);
-  });
 
   test("PATCH should fail with incorrect payload", async () => {
     const res = await app.request("/api/category", {

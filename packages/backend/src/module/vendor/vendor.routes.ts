@@ -20,4 +20,10 @@ export const vendorRoute = new Hono<{ Variables: ProtectedType }>({
 		const user = c.get("user");
 		const [createdVendor] = await vendorRepo.create(payload, user);
 		return c.json(createdVendor, 201);
+	})
+	.delete("/", zValidator("json", vendorSchema.remove), async (c) => {
+		const payload = c.req.valid("json");
+		const user = c.get("user");
+		await vendorRepo.remove(payload, user);
+		return c.json({ message: "ok" }, 200);
 	});

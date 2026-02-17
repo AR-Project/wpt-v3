@@ -1,3 +1,6 @@
+import { eq } from "drizzle-orm";
+import { HTTPException } from "hono/http-exception";
+
 import { db } from "@/db";
 import { vendor, type VendorDbInsert } from "@/db/schema/vendor.schema";
 import type { NonNullableUser } from "@/lib/auth";
@@ -30,4 +33,19 @@ export async function create(
 		.insert(vendor)
 		.values(dbPayload)
 		.returning({ id: vendor.id, name: vendor.name });
+}
+
+export async function remove(payload: { id: string }, user: NonNullableUser) {
+	await db.transaction(async (tx) => {
+		const vendorToDelete = await tx.query.vendor.findFirst({
+			where: (vendor, { eq }) => eq(vendor.id, payload.id),
+		});
+		if (!vendorToDelete)
+			throw new HTTPException(404, { message: "vendor not exist" });
+
+		if (vendorToDelete.userIdParent !== user.parentId)
+			throw new HTTPException(403, { message: "user not allowed" });
+
+		await tx.delete(vendor).where(eq(vendor.id, payload.id));
+	});
 }
