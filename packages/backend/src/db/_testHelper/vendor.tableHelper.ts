@@ -5,7 +5,7 @@ import { vendor, type VendorDbInsert } from "../schema/vendor.schema";
 
 type CleanOption = {
 	userId?: string | null;
-	categoryId?: string | null;
+	vendorId?: string | null;
 };
 
 export async function add(payload: VendorDbInsert) {
@@ -39,8 +39,8 @@ export async function clean(option?: CleanOption) {
 				eq(vendor.userIdParent, option.userId),
 			)
 		: undefined;
-	const byCategory = option?.categoryId
-		? eq(vendor.id, option.categoryId)
+	const byCategory = option?.vendorId
+		? eq(vendor.id, option.vendorId)
 		: undefined;
 
 	await db.delete(vendor).where(or(byUser, byCategory));
