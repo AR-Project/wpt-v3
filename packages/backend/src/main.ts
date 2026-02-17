@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 import { logger } from "hono/logger";
 import { trimTrailingSlash } from "hono/trailing-slash";
+import { createMiddleware } from "hono/factory";
 
 import { authRoute } from "@module/auth/auth.routes";
 import { profileRoute } from "@module/profile/profile.routes";
@@ -10,8 +11,7 @@ import { itemRoute } from "@module/item/item.routes";
 
 const conditionalLogger = () => {
 	return process.env.NODE_ENV === "test"
-		? // biome-ignore lint/suspicious/noExplicitAny: context type not needed here
-			async (_c: any, next: any) => await next()
+		? createMiddleware(async (_c, next) => await next())
 		: logger();
 };
 
