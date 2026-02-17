@@ -8,6 +8,7 @@ import { authRoute } from "@module/auth/auth.routes";
 import { profileRoute } from "@module/profile/profile.routes";
 import { categoryRoute } from "@module/category/category.routes";
 import { itemRoute } from "@module/item/item.routes";
+import { vendorRoute } from "@/module/vendor/vendor.routes";
 
 const conditionalLogger = () => {
 	return process.env.NODE_ENV === "test"
@@ -23,6 +24,7 @@ export const app = new Hono()
 	.route("/profile", profileRoute)
 	.route("/category", categoryRoute)
 	.route("/item", itemRoute)
+	.route("/vendor", vendorRoute)
 	.get("/hello", async (c) => c.json({ message: "hello from api" }))
 	.onError((error, c) => {
 		if (error instanceof HTTPException)
