@@ -13,7 +13,7 @@ import type {
 } from "./item.schema";
 import { generateId } from "@/lib/idGenerator";
 
-export async function getItems(user: NonNullableUser) {
+export async function getAllByUser(user: NonNullableUser) {
 	return await db.query.item.findMany({
 		where: (item, { eq }) => eq(item.userIdParent, user.parentId),
 		columns: {
@@ -24,7 +24,7 @@ export async function getItems(user: NonNullableUser) {
 	});
 }
 
-export async function createItemRepo(
+export async function create(
 	payload: CreateItemPayload,
 	user: NonNullableUser,
 ) {
@@ -72,7 +72,7 @@ export async function createItemRepo(
 	});
 }
 
-export async function updateItemRepo(
+export async function update(
 	payload: UpdateItemPayload,
 	user: NonNullableUser,
 ) {
@@ -93,7 +93,7 @@ export async function updateItemRepo(
 	});
 }
 
-export async function deleteItemRepo(
+export async function remove(
 	payload: DeleteItemPayload,
 	user: NonNullableUser,
 ) {
@@ -110,7 +110,7 @@ export async function deleteItemRepo(
 	});
 }
 
-export async function updateItemSortOrderRepo(
+export async function updateSortOrderMultiple(
 	categoryIdToUpdate: string,
 	user: NonNullableUser,
 	itemIdsNewOrder: string[],

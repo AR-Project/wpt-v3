@@ -4,19 +4,8 @@ import { authProtectedMiddleware } from "@/middleware/auth.middleware";
 
 import type { ProtectedType } from "@lib/auth";
 import { zValidator } from "@/lib/validator-wrapper";
-import {
-	createItemSchema,
-	deleteItemSchema,
-	updateItemSchema,
-	updateItemsSortOrderSchema,
-} from "./item.schema";
-import {
-	createItemRepo,
-	deleteItemRepo,
-	getItems,
-	updateItemRepo,
-	updateItemSortOrderRepo,
-} from "./item.repository";
+import * as itemSchema from "./item.schema";
+import * as itemRepo from "./item.repository";
 
 export const itemRoute = new Hono<{ Variables: ProtectedType }>({
 	strict: false,
@@ -25,42 +14,46 @@ export const itemRoute = new Hono<{ Variables: ProtectedType }>({
 	.get("/", async (c) => {
 		const user = c.get("user");
 
-		const items = await getItems(user);
+		const items = await itemRepo.getAllByUser(user);
 
 		return c.json(items);
 	})
-	.post("/", zValidator("json", createItemSchema), async (c) => {
+	.post("/", zValidator("json", itemSchema.create), async (c) => {
 		const payload = c.req.valid("json");
 		const user = c.get("user");
-		const [createdItem] = await createItemRepo(payload, user);
+		const [createdItem] = await itemRepo.create(payload, user);
 
 		return c.json(createdItem, 201);
 	})
-	.delete("/", zValidator("json", deleteItemSchema), async (c) => {
+	.delete("/", zValidator("json", itemSchema.remove), async (c) => {
 		const payload = c.req.valid("json");
 		const user = c.get("user");
 
-		await deleteItemRepo(payload, user);
+		await itemRepo.remove(payload, user);
 
 		return c.json({ message: "ok" }, 200);
 	})
-	.patch("/", zValidator("json", updateItemSchema), async (c) => {
+	.patch("/", zValidator("json", itemSchema.update), async (c) => {
 		const payload = c.req.valid("json");
 		const user = c.get("user");
 
-		await updateItemRepo(payload, user);
+		await itemRepo.update(payload, user);
 
 		return c.json({ message: "ok" }, 200);
 	})
 	.patch(
 		"/sort-order",
-		zValidator("json", updateItemsSortOrderSchema),
+		zValidator("json", itemSchema.updateSortOrderMultiple),
 		async (c) => {
 			const { itemIdsNewOrder, categoryId: categoryIdToUpdate } =
 				c.req.valid("json");
 			const user = c.get("user");
 
-			await updateItemSortOrderRepo(categoryIdToUpdate, user, itemIdsNewOrder);
+			await itemRepo.updateSortOrderMultiple(
+				categoryIdToUpdate,
+				user,
+				itemIdsNewOrder,
+			);
 
 			return c.json({ message: "ok" }, 200);
 		},

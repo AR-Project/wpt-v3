@@ -1,12 +1,12 @@
 import { z } from "zod";
 
-export const createItemSchema = z.object({
+export const create = z.object({
 	name: z.string(),
 	categoryId: z.string().optional(),
 });
-export type CreateItemPayload = z.infer<typeof createItemSchema>;
+export type CreateItemPayload = z.infer<typeof create>;
 
-export const updateItemSchema = z
+export const update = z
 	.object({
 		id: z.string(),
 		name: z.string().optional(),
@@ -22,16 +22,16 @@ export const updateItemSchema = z
 			message: "No update data provided",
 		},
 	);
-export type UpdateItemPayload = z.infer<typeof updateItemSchema>;
+export type UpdateItemPayload = z.infer<typeof update>;
 
-export const deleteItemSchema = z.object({ id: z.string() });
-export type DeleteItemPayload = z.infer<typeof deleteItemSchema>;
+export const remove = z.object({ id: z.string() });
+export type DeleteItemPayload = z.infer<typeof remove>;
 
-export const updateItemsSortOrderSchema = z.object({
+export const updateSortOrderMultiple = z.object({
 	itemIdsNewOrder: z.array(z.string()),
 	categoryId: z.string(),
 });
 
 export type UpdateItemsSortOrderPayload = z.infer<
-	typeof updateItemsSortOrderSchema
+	typeof updateSortOrderMultiple
 >;
