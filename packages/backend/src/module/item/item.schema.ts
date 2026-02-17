@@ -22,8 +22,10 @@ export const updateItemSchema = z
 			message: "No update data provided",
 		},
 	);
-
 export type UpdateItemPayload = z.infer<typeof updateItemSchema>;
+
+export const deleteItemSchema = z.object({ id: z.string() });
+export type DeleteItemPayload = z.infer<typeof deleteItemSchema>;
 
 export const updateItemsSortOrderSchema = z.object({
 	itemIdsNewOrder: z.array(z.string()),
