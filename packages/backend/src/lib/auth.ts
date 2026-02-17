@@ -132,7 +132,7 @@ export function sanitizeUser(user: AuthUser) {
 
 export type AuthUser = typeof auth.$Infer.Session.user;
 
-type NonNullableUser = EnsureNonNullable<
+export type NonNullableUser = EnsureNonNullable<
 	AuthUser,
 	"parentId" | "defaultCategoryId"
 >;
