@@ -66,55 +66,56 @@ describe("vendor route", () => {
 			expect(resJson.length).toBe(1);
 			expect(item?.name).toBe("vendor_GET");
 
-			await vendorTbHelper.clean({ categoryId: "vendor_GET" });
+			await vendorTbHelper.clean({ vendorId: "vendor_GET" });
+		});
+	});
+
+	describe("POST", () => {
+		test("should persist vendor ", async () => {
+			const payload = {
+				name: "post-vendor",
+			};
+
+			const categoryRes = await app.request("/api/vendor", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					Cookie: cookie,
+				},
+				body: JSON.stringify(payload),
+			});
+
+			const resJson = (await categoryRes.json()) as {
+				id: string;
+				name: string;
+			};
+
+			expect(categoryRes.status).toBe(201);
+
+			expect(resJson.id).toBeDefined();
+			expect(resJson.name).toBe("post-vendor");
+
+			await vendorTbHelper.clean({ vendorId: resJson.id });
+		});
+
+		test("should reject incorrect payload ", async () => {
+			const payload = { id: "bsca" };
+			const categoryRes = await app.request("/api/vendor", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					Cookie: cookie,
+				},
+				body: JSON.stringify(payload),
+			});
+
+			expect(categoryRes.status).toBe(400);
 		});
 	});
 
 	/**
 
-  test("POST should return id and persist category with correct payload ", async () => {
-    const payload = {
-      name: "post-category",
-    };
-
-    const categoryRes = await app.request("/api/category", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Cookie: cookie,
-      },
-      body: JSON.stringify(payload),
-    });
-
-    const resJson = (await categoryRes.json()) as {
-      id: string;
-      name: string;
-    };
-
-    expect(categoryRes.status).toBe(201);
-
-    expect(resJson.id).toBeDefined();
-    expect(resJson.name).toBe("post-category");
-
-    await categoryTbHelper.clean({ categoryId: resJson.id });
-  });
-
-  test("POST should fail with incorrect payload ", async () => {
-    const payload = {
-      name: "a",
-    };
-
-    const categoryRes = await app.request("/api/category", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Cookie: cookie,
-      },
-      body: JSON.stringify(payload),
-    });
-
-    expect(categoryRes.status).toBe(400);
-  });
+  
 
   test("DELETE should fail when tried deleting nonexist category", async () => {
     const res = await app.request("/api/category", {

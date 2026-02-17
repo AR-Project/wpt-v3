@@ -14,22 +14,10 @@ export const vendorRoute = new Hono<{ Variables: ProtectedType }>({
 	.get("/", async (c) => {
 		const user = c.get("user");
 		return c.json(await vendorRepo.getAll(user));
+	})
+	.post("/", zValidator("json", vendorSchema.create), async (c) => {
+		const payload = c.req.valid("json");
+		const user = c.get("user");
+		const [createdVendor] = await vendorRepo.create(payload, user);
+		return c.json(createdVendor, 201);
 	});
-// .post("/", zValidator("json", vendorSchema.create), async (c) => {
-// 		const payload = c.req.valid("json");
-// 		const user = c.get("user");
-
-// 		const dbPayload: CreateCategoryDbPayload = {
-// 			id: `cat_${generateId(10)}`,
-// 			name: payload.name,
-// 			userIdParent: user.parentId,
-// 			userIdCreator: user.id,
-// 		};
-
-// 		const [createdCategory] = await db
-// 			.insert(category)
-// 			.values(dbPayload)
-// 			.returning({ id: category.id, name: category.name });
-
-// 		return c.json(createdCategory, 201);
-// 	})
