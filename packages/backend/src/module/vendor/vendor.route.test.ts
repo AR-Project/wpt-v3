@@ -13,15 +13,15 @@ import { signUpSignInHelper } from "../auth/auth.routes.test.helper";
 
 import * as vendorTbHelper from "@db/_testHelper/vendor.tableHelper";
 
-describe("category route", () => {
-	let currentUserId: string | null = "";
+describe("vendor route", () => {
+	let currentUserId: string = "";
 	let cookie: string = "";
 
 	beforeAll(async () => {
 		const testUser = {
-			email: "category@test.com",
+			email: "vendor@test.com",
 			password: "Password123!",
-			name: "test-user-category",
+			name: "vendor-test",
 		};
 
 		const userData = await signUpSignInHelper(testUser, app);
@@ -35,33 +35,42 @@ describe("category route", () => {
 		await vendorTbHelper.clean({ userId: currentUserId });
 		await authTableHelper.clean({ userId: currentUserId });
 	});
+	describe("GET", () => {
+		test("should prevent access without user", async () => {
+			const profileRes = await app.request("/api/vendor");
+			expect(profileRes.status).toBe(401);
+		});
 
-	test("GET should fail when accessing category signed out", async () => {
-		const profileRes = await app.request("/api/vendor");
-		expect(profileRes.status).toBe(401);
+		test("should return vendor list", async () => {
+			await vendorTbHelper.add({
+				id: "vendor_GET",
+				name: "vendor_GET",
+				userIdParent: currentUserId,
+				userIdCreator: currentUserId,
+			});
+
+			const res = await app.request("/api/vendor", {
+				method: "GET",
+				headers: {
+					Cookie: cookie,
+				},
+			});
+
+			const resJson = (await res.json()) as {
+				id: string;
+				name: string;
+			}[];
+
+			const [item] = resJson;
+
+			expect(resJson.length).toBe(1);
+			expect(item?.name).toBe("vendor_GET");
+
+			await vendorTbHelper.clean({ categoryId: "vendor_GET" });
+		});
 	});
 
 	/**
-
-  test("GET should return default category after signin up", async () => {
-    const categoryRes = await app.request("/api/category", {
-      method: "GET",
-      headers: {
-        Cookie: cookie,
-      },
-    });
-
-    const resJson = (await categoryRes.json()) as {
-      id: string;
-      name: string;
-      sortOrder: number;
-    }[];
-    expect(resJson.length).toBe(1);
-
-    const [defaultCategory] = resJson;
-
-    expect(defaultCategory?.name).toBe("test-user-category's Category");
-  });
 
   test("POST should return id and persist category with correct payload ", async () => {
     const payload = {
