@@ -5,7 +5,7 @@ import { relations } from "drizzle-orm";
 export type VendorDbInsert = typeof vendor.$inferInsert;
 
 export const vendor = sqliteTable(
-	"item",
+	"vendor",
 	(t) => ({
 		id: t.text("id").primaryKey().unique().notNull(),
 		userIdParent: t
