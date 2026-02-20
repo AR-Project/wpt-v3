@@ -11,4 +11,4 @@ export type AuthTypeUser = AuthUserType;
 export * from "@module/category/category.schema";
 
 // Item Schema
-export * as productSchema from "@/module/item/product.schema";
+export * as productSchema from "@/module/product/product.schema";

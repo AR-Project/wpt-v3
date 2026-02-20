@@ -7,7 +7,7 @@ import { createMiddleware } from "hono/factory";
 import { authRoute } from "@module/auth/auth.routes";
 import { profileRoute } from "@module/profile/profile.routes";
 import { categoryRoute } from "@module/category/category.routes";
-import { productRoute } from "@/module/item/product.routes";
+import { productRoute } from "@/module/product/product.routes";
 import { vendorRoute } from "@/module/vendor/vendor.routes";
 
 const conditionalLogger = () => {
