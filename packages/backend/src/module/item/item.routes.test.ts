@@ -3,7 +3,7 @@ import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { app } from "@/main";
 import { authTableHelper } from "@/db/_testHelper/authDbHelper";
 import { signUpSignInHelper } from "../auth/auth.routes.test.helper";
-import { itemTbHelper } from "@/db/_testHelper/itemDbHelper";
+import { itemTbHelper } from "@/db/_testHelper/product.tableHelper";
 import { categoryTbHelper } from "@/db/_testHelper/categoryDbHelper";
 import type { CreateCategoryDbPayload } from "@/db/schema/category.schema";
 import type { UpdateItemsSortOrderPayload } from "./item.schema";
