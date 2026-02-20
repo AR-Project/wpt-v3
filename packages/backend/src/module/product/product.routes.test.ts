@@ -14,7 +14,7 @@ type PostItemRes = {
 	categoryId: string;
 };
 
-describe("item route", () => {
+describe("product route", () => {
 	let currentUserId: string | null = "";
 	let cookie: string = "";
 	let defaultCategoryId: string = "";
@@ -58,12 +58,12 @@ describe("item route", () => {
 		});
 
 		test.serial("should fail when accessing category signed out", async () => {
-			const res = await app.request("/api/item");
+			const res = await app.request("/api/product");
 			expect(res.status).toBe(401);
 		});
 
 		test.serial("should return items", async () => {
-			const res = await app.request("/api/item", {
+			const res = await app.request("/api/product", {
 				method: "GET",
 				headers: {
 					Cookie: cookie,
@@ -92,7 +92,7 @@ describe("item route", () => {
 				name: "post-item",
 			};
 
-			const categoryRes = await app.request("/api/item", {
+			const categoryRes = await app.request("/api/product", {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",
@@ -119,7 +119,7 @@ describe("item route", () => {
 				categoryId: "not-exist-category",
 			};
 
-			const categoryRes = await app.request("/api/item", {
+			const categoryRes = await app.request("/api/product", {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",
@@ -149,7 +149,7 @@ describe("item route", () => {
 				categoryId: "cat_mock123",
 			};
 
-			const categoryRes = await app.request("/api/item", {
+			const categoryRes = await app.request("/api/product", {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",
@@ -171,7 +171,7 @@ describe("item route", () => {
 
 	describe("DELETE endpoint", () => {
 		test.serial("should fail when item not exist", async () => {
-			const res = await app.request("/api/item", {
+			const res = await app.request("/api/product", {
 				method: "DELETE",
 				headers: {
 					"Content-Type": "application/json",
@@ -200,7 +200,7 @@ describe("item route", () => {
 				userIdParent: newUser.id,
 			});
 
-			const res = await app.request("/api/item", {
+			const res = await app.request("/api/product", {
 				method: "DELETE",
 				headers: {
 					"Content-Type": "application/json",
@@ -230,7 +230,7 @@ describe("item route", () => {
 				userIdParent: currentUserId!,
 			});
 
-			const res = await app.request("/api/item", {
+			const res = await app.request("/api/product", {
 				method: "DELETE",
 				headers: {
 					"Content-Type": "application/json",
@@ -267,7 +267,7 @@ describe("item route", () => {
 				userIdParent: currentUserId!,
 			});
 
-			const res = await app.request("/api/item", {
+			const res = await app.request("/api/product", {
 				method: "PATCH",
 				headers: {
 					"Content-Type": "application/json",
@@ -301,7 +301,7 @@ describe("item route", () => {
 				userIdParent: currentUserId!,
 			});
 
-			const res = await app.request("/api/item", {
+			const res = await app.request("/api/product", {
 				method: "PATCH",
 				headers: {
 					"Content-Type": "application/json",
@@ -323,7 +323,7 @@ describe("item route", () => {
 				itemIdsNewOrder: ["invalid"],
 			};
 
-			const res = await app.request("/api/item/sort-order", {
+			const res = await app.request("/api/product/sort-order", {
 				method: "PATCH",
 				headers: {
 					"Content-Type": "application/json",
@@ -371,7 +371,7 @@ describe("item route", () => {
 				itemIdsNewOrder: ["item_order-001", "item_order-002", "item_order-000"],
 			};
 
-			const res = await app.request("/api/item/sort-order", {
+			const res = await app.request("/api/product/sort-order", {
 				method: "PATCH",
 				headers: {
 					"Content-Type": "application/json",

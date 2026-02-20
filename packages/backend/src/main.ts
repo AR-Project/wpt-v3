@@ -23,7 +23,7 @@ export const app = new Hono()
 	.route("/auth", authRoute)
 	.route("/profile", profileRoute)
 	.route("/category", categoryRoute)
-	.route("/item", productRoute)
+	.route("/product", productRoute)
 	.route("/vendor", vendorRoute)
 	.get("/hello", async (c) => c.json({ message: "hello from api" }))
 	.onError((error, c) => {
