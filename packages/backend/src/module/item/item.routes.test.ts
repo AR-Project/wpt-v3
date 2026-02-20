@@ -6,7 +6,7 @@ import { signUpSignInHelper } from "../auth/auth.routes.test.helper";
 import { productTbHelper } from "@/db/_testHelper/product.tableHelper";
 import { categoryTbHelper } from "@/db/_testHelper/categoryDbHelper";
 import type { CreateCategoryDbPayload } from "@/db/schema/category.schema";
-import type { UpdateItemsSortOrderPayload } from "./item.schema";
+import type { UpdateItemsSortOrderPayload } from "./product.schema";
 
 type PostItemRes = {
 	id: string;

@@ -4,7 +4,7 @@ import { authProtectedMiddleware } from "@/middleware/auth.middleware";
 
 import type { ProtectedType } from "@lib/auth";
 import { zValidator } from "@/lib/validator-wrapper";
-import * as itemSchema from "./item.schema";
+import * as productSchema from "./product.schema";
 import * as itemRepo from "./item.repository";
 
 export const itemRoute = new Hono<{ Variables: ProtectedType }>({
@@ -18,14 +18,14 @@ export const itemRoute = new Hono<{ Variables: ProtectedType }>({
 
 		return c.json(items);
 	})
-	.post("/", zValidator("json", itemSchema.create), async (c) => {
+	.post("/", zValidator("json", productSchema.create), async (c) => {
 		const payload = c.req.valid("json");
 		const user = c.get("user");
 		const [createdItem] = await itemRepo.create(payload, user);
 
 		return c.json(createdItem, 201);
 	})
-	.delete("/", zValidator("json", itemSchema.remove), async (c) => {
+	.delete("/", zValidator("json", productSchema.remove), async (c) => {
 		const payload = c.req.valid("json");
 		const user = c.get("user");
 
@@ -33,7 +33,7 @@ export const itemRoute = new Hono<{ Variables: ProtectedType }>({
 
 		return c.json({ message: "ok" }, 200);
 	})
-	.patch("/", zValidator("json", itemSchema.update), async (c) => {
+	.patch("/", zValidator("json", productSchema.update), async (c) => {
 		const payload = c.req.valid("json");
 		const user = c.get("user");
 
@@ -43,7 +43,7 @@ export const itemRoute = new Hono<{ Variables: ProtectedType }>({
 	})
 	.patch(
 		"/sort-order",
-		zValidator("json", itemSchema.updateSortOrderMultiple),
+		zValidator("json", productSchema.updateSortOrderMultiple),
 		async (c) => {
 			const { itemIdsNewOrder, categoryId: categoryIdToUpdate } =
 				c.req.valid("json");

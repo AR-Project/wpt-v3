@@ -10,7 +10,7 @@ import type {
 	CreateItemPayload,
 	DeleteItemPayload,
 	UpdateItemPayload,
-} from "./item.schema";
+} from "./product.schema";
 import { generateId } from "@/lib/idGenerator";
 
 export async function getAllByUser(user: NonNullableUser) {
