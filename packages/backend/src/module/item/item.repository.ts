@@ -5,7 +5,7 @@ import type { NonNullableUser } from "@/lib/auth";
 import { arraysHaveEqualElements } from "@/lib/utils/array-validator";
 
 import { db } from "@/db";
-import { item, type CreateItemDbPayload } from "@/db/schema/item.schema";
+import { product, type CreateItemDbPayload } from "@/db/schema/item.schema";
 import type {
 	CreateItemPayload,
 	DeleteItemPayload,
@@ -14,8 +14,8 @@ import type {
 import { generateId } from "@/lib/idGenerator";
 
 export async function getAllByUser(user: NonNullableUser) {
-	return await db.query.item.findMany({
-		where: (item, { eq }) => eq(item.userIdParent, user.parentId),
+	return await db.query.product.findMany({
+		where: (product, { eq }) => eq(product.userIdParent, user.parentId),
 		columns: {
 			id: true,
 			name: true,
@@ -64,10 +64,10 @@ export async function create(
 			dbPayload.categoryId = user.defaultCategoryId;
 		}
 
-		return await tx.insert(item).values(dbPayload).returning({
-			id: item.id,
-			name: item.name,
-			categoryId: item.categoryId,
+		return await tx.insert(product).values(dbPayload).returning({
+			id: product.id,
+			name: product.name,
+			categoryId: product.categoryId,
 		});
 	});
 }
@@ -79,8 +79,8 @@ export async function update(
 	await db.transaction(async (tx) => {
 		const { id, ...dataToUpdate } = payload;
 
-		const itemToUpdate = await tx.query.item.findFirst({
-			where: (item, { eq }) => eq(item.id, id),
+		const itemToUpdate = await tx.query.product.findFirst({
+			where: (product, { eq }) => eq(product.id, id),
 		});
 		if (!itemToUpdate)
 			throw new HTTPException(403, { message: "item not exist" });
@@ -89,7 +89,7 @@ export async function update(
 		if (itemToUpdate.userIdCreator !== user.id)
 			throw new HTTPException(403, { message: "user not allowed" });
 
-		await tx.update(item).set(dataToUpdate).where(eq(item.id, id));
+		await tx.update(product).set(dataToUpdate).where(eq(product.id, id));
 	});
 }
 
@@ -98,15 +98,15 @@ export async function remove(
 	user: NonNullableUser,
 ) {
 	await db.transaction(async (tx) => {
-		const itemToDelete = await tx.query.item.findFirst({
-			where: (item, { eq }) => eq(item.id, payload.id),
+		const itemToDelete = await tx.query.product.findFirst({
+			where: (product, { eq }) => eq(product.id, payload.id),
 		});
 		if (!itemToDelete)
 			throw new HTTPException(403, { message: "item not exist" });
 		if (itemToDelete.userIdCreator !== user.id)
 			throw new HTTPException(403, { message: "user not allowed" });
 
-		await tx.delete(item).where(eq(item.id, payload.id));
+		await tx.delete(product).where(eq(product.id, payload.id));
 	});
 }
 
@@ -144,14 +144,14 @@ export async function updateSortOrderMultiple(
 		const sqlChunks: SQL[] = [];
 		sqlChunks.push(sql`(case`);
 		itemIdsNewOrder.forEach((id, index) => {
-			sqlChunks.push(sql`when ${item.id} = ${id} then ${index}`);
+			sqlChunks.push(sql`when ${product.id} = ${id} then ${index}`);
 		});
 		sqlChunks.push(sql`end)`);
 		const finalSql: SQL = sql.join(sqlChunks, sql.raw(" "));
 
 		await tx
-			.update(item)
+			.update(product)
 			.set({ sortOrder: finalSql })
-			.where(inArray(item.id, itemIdsNewOrder));
+			.where(inArray(product.id, itemIdsNewOrder));
 	});
 }

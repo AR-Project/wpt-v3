@@ -7,7 +7,7 @@ import {
 	type AnySQLiteColumn,
 } from "drizzle-orm/sqlite-core";
 import { category } from "./category.schema";
-import { item } from "./item.schema";
+import { product } from "./item.schema";
 import { vendor } from "./vendor.schema";
 
 export type Role = "admin" | "manager" | "staff" | "guest";
@@ -131,8 +131,8 @@ export const userRelations = relations(user, ({ many, one }) => ({
 		fields: [user.defaultCategoryId],
 		references: [category.id],
 	}),
-	itemsAsParent: many(item, { relationName: "parent" }),
-	itemsAsCreator: many(item, { relationName: "creator" }),
+	itemsAsParent: many(product, { relationName: "parent" }),
+	itemsAsCreator: many(product, { relationName: "creator" }),
 }));
 
 export const sessionRelations = relations(session, ({ one }) => ({

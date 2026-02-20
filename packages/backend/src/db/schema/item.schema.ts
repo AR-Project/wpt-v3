@@ -3,9 +3,9 @@ import { user } from "./auth.schema";
 import { category } from "./category.schema";
 import { relations } from "drizzle-orm";
 
-export type CreateItemDbPayload = typeof item.$inferInsert;
+export type CreateItemDbPayload = typeof product.$inferInsert;
 
-export const item = sqliteTable(
+export const product = sqliteTable(
 	"item",
 	(t) => ({
 		id: t.text("id").primaryKey().unique().notNull(),
@@ -45,19 +45,19 @@ export const item = sqliteTable(
 	],
 );
 
-export const itemRelations = relations(item, ({ one }) => ({
+export const itemRelations = relations(product, ({ one }) => ({
 	userParent: one(user, {
-		fields: [item.userIdParent],
+		fields: [product.userIdParent],
 		references: [user.id],
 		relationName: "parent",
 	}),
 	userCreator: one(user, {
-		fields: [item.userIdCreator],
+		fields: [product.userIdCreator],
 		references: [user.id],
 		relationName: "creator",
 	}),
 	category: one(category, {
-		fields: [item.categoryId],
+		fields: [product.categoryId],
 		references: [category.id],
 	}),
 }));
