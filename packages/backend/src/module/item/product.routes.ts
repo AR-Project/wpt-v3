@@ -7,7 +7,7 @@ import { zValidator } from "@/lib/validator-wrapper";
 import * as productSchema from "./product.schema";
 import * as productRepo from "./product.repository";
 
-export const itemRoute = new Hono<{ Variables: ProtectedType }>({
+export const productRoute = new Hono<{ Variables: ProtectedType }>({
 	strict: false,
 })
 	.use(authProtectedMiddleware)
