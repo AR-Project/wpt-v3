@@ -7,7 +7,7 @@ type CleanOption = {
 	itemId?: string | null;
 };
 
-export const itemTbHelper = {
+export const productTbHelper = {
 	add: async (payload: CreateItemDbPayload) => {
 		await db
 			.insert(product)

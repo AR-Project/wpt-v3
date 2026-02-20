@@ -3,7 +3,7 @@ import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { app } from "@/main";
 import { authTableHelper } from "@/db/_testHelper/authDbHelper";
 import { signUpSignInHelper } from "../auth/auth.routes.test.helper";
-import { itemTbHelper } from "@/db/_testHelper/product.tableHelper";
+import { productTbHelper } from "@/db/_testHelper/product.tableHelper";
 import { categoryTbHelper } from "@/db/_testHelper/categoryDbHelper";
 import type { CreateCategoryDbPayload } from "@/db/schema/category.schema";
 import type { UpdateItemsSortOrderPayload } from "./item.schema";
@@ -34,7 +34,7 @@ describe("item route", () => {
 
 	afterAll(async () => {
 		// just to make sure clean table after this file test
-		await itemTbHelper.clean({ userId: currentUserId });
+		await productTbHelper.clean({ userId: currentUserId });
 
 		await categoryTbHelper.clean({ userId: currentUserId });
 		await authTableHelper.clean({ userId: currentUserId });
@@ -44,7 +44,7 @@ describe("item route", () => {
 		const itemIdToGet = "item_getEndpoint123";
 
 		beforeAll(async () => {
-			await itemTbHelper.add({
+			await productTbHelper.add({
 				id: itemIdToGet,
 				name: "test-item-GET",
 				userIdParent: currentUserId!,
@@ -54,7 +54,7 @@ describe("item route", () => {
 		});
 
 		afterAll(async () => {
-			await itemTbHelper.clean({ itemId: itemIdToGet });
+			await productTbHelper.clean({ itemId: itemIdToGet });
 		});
 
 		test.serial("should fail when accessing category signed out", async () => {
@@ -110,7 +110,7 @@ describe("item route", () => {
 			expect(resJson.categoryId).toBe(defaultCategoryId);
 
 			// cleanup
-			await itemTbHelper.clean({ itemId: resJson.id });
+			await productTbHelper.clean({ itemId: resJson.id });
 		});
 
 		test.serial("should fail when category is not exist", async () => {
@@ -164,7 +164,7 @@ describe("item route", () => {
 			expect(resJson.categoryId).toBe("cat_mock123");
 			expect(resJson.name).toBe("post-item-with-different-category");
 
-			await itemTbHelper.clean({ itemId: resJson.id });
+			await productTbHelper.clean({ itemId: resJson.id });
 			await categoryTbHelper.clean({ categoryId: mockCategory.id });
 		});
 	});
@@ -192,7 +192,7 @@ describe("item route", () => {
 				app,
 			);
 
-			await itemTbHelper.add({
+			await productTbHelper.add({
 				categoryId: newUser.defaultCategoryId,
 				id: "item_123",
 				name: "new-user-item",
@@ -214,7 +214,7 @@ describe("item route", () => {
 			expect(json.message).toBe("user not allowed");
 
 			// cleaning up second user
-			await itemTbHelper.clean({ itemId: "item_123" });
+			await productTbHelper.clean({ itemId: "item_123" });
 			await categoryTbHelper.clean({ categoryId: newUser.defaultCategoryId });
 			await authTableHelper.clean({ userId: newUser.id });
 		});
@@ -222,7 +222,7 @@ describe("item route", () => {
 		test.serial("should success", async () => {
 			const itemIdToBeDeleted = "item_delete123";
 
-			await itemTbHelper.add({
+			await productTbHelper.add({
 				categoryId: defaultCategoryId,
 				id: itemIdToBeDeleted,
 				name: "new-user-item",
@@ -241,7 +241,7 @@ describe("item route", () => {
 
 			expect(res.status).toBe(200);
 
-			const itemToDelete = await itemTbHelper.findById(itemIdToBeDeleted);
+			const itemToDelete = await productTbHelper.findById(itemIdToBeDeleted);
 			console.log(itemIdToBeDeleted);
 
 			expect(itemToDelete.length).toBe(0);
@@ -259,7 +259,7 @@ describe("item route", () => {
 
 			const itemIdTobeUpdate = "item_patch123";
 
-			await itemTbHelper.add({
+			await productTbHelper.add({
 				categoryId: defaultCategoryId,
 				id: itemIdTobeUpdate,
 				name: "user-item",
@@ -282,18 +282,18 @@ describe("item route", () => {
 
 			expect(res.status).toBe(200);
 
-			const updatedItem = await itemTbHelper.findById(itemIdTobeUpdate);
+			const updatedItem = await productTbHelper.findById(itemIdTobeUpdate);
 			expect(updatedItem[0]?.name).toBe("new-name-user-item");
 			expect(updatedItem[0]?.categoryId).toBe("cat_for-item-patch123");
 
-			await itemTbHelper.clean({ itemId: itemIdTobeUpdate });
+			await productTbHelper.clean({ itemId: itemIdTobeUpdate });
 			await categoryTbHelper.clean({ categoryId: "cat_for-item-patch123" });
 		});
 
 		test.serial("PATCH should fail when no data is provided", async () => {
 			const itemIdTobeUpdate = "item_patch-fail-123";
 
-			await itemTbHelper.add({
+			await productTbHelper.add({
 				categoryId: defaultCategoryId,
 				id: itemIdTobeUpdate,
 				name: "user-item",
@@ -312,7 +312,7 @@ describe("item route", () => {
 				}),
 			});
 			expect(res.status).toBe(400);
-			await itemTbHelper.clean({ itemId: itemIdTobeUpdate });
+			await productTbHelper.clean({ itemId: itemIdTobeUpdate });
 		});
 	});
 
@@ -340,7 +340,7 @@ describe("item route", () => {
 
 		test("should success", async () => {
 			await Promise.all([
-				itemTbHelper.add({
+				productTbHelper.add({
 					categoryId: defaultCategoryId!,
 					id: "item_order-000",
 					name: "item #1",
@@ -348,7 +348,7 @@ describe("item route", () => {
 					userIdParent: currentUserId!,
 					sortOrder: 0,
 				}),
-				itemTbHelper.add({
+				productTbHelper.add({
 					categoryId: defaultCategoryId!,
 					id: "item_order-001",
 					name: "item #1",
@@ -356,7 +356,7 @@ describe("item route", () => {
 					userIdParent: currentUserId!,
 					sortOrder: 1,
 				}),
-				itemTbHelper.add({
+				productTbHelper.add({
 					categoryId: defaultCategoryId!,
 					id: "item_order-002",
 					name: "item #1",
@@ -382,9 +382,9 @@ describe("item route", () => {
 			expect(res.status).toBe(200);
 
 			const [[item001], [item000], [item002]] = await Promise.all([
-				itemTbHelper.findById("item_order-001"),
-				itemTbHelper.findById("item_order-000"),
-				itemTbHelper.findById("item_order-002"),
+				productTbHelper.findById("item_order-001"),
+				productTbHelper.findById("item_order-000"),
+				productTbHelper.findById("item_order-002"),
 			]);
 
 			expect(item001?.sortOrder).toBe(0);
@@ -392,9 +392,9 @@ describe("item route", () => {
 			expect(item000?.sortOrder).toBe(2);
 
 			await Promise.all([
-				itemTbHelper.clean({ itemId: "item_order-000" }),
-				itemTbHelper.clean({ itemId: "item_order-001" }),
-				itemTbHelper.clean({ itemId: "item_order-002" }),
+				productTbHelper.clean({ itemId: "item_order-000" }),
+				productTbHelper.clean({ itemId: "item_order-001" }),
+				productTbHelper.clean({ itemId: "item_order-002" }),
 			]);
 		});
 	});
