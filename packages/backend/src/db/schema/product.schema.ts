@@ -2,6 +2,7 @@ import { index, sqliteTable } from "drizzle-orm/sqlite-core";
 import { user } from "./auth.schema";
 import { category } from "./category.schema";
 import { relations } from "drizzle-orm";
+import { purchaseItem } from "./purchaseItem.schema";
 
 export type ProductDbInsert = typeof product.$inferInsert;
 
@@ -50,7 +51,7 @@ export const product = sqliteTable(
 	],
 );
 
-export const productRelations = relations(product, ({ one }) => ({
+export const productRelations = relations(product, ({ one, many }) => ({
 	userParent: one(user, {
 		fields: [product.userIdParent],
 		references: [user.id],
@@ -65,4 +66,5 @@ export const productRelations = relations(product, ({ one }) => ({
 		fields: [product.categoryId],
 		references: [category.id],
 	}),
+	purchaseItem: many(purchaseItem),
 }));

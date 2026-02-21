@@ -5,6 +5,7 @@ import { user } from "./auth.schema";
 import { relations } from "drizzle-orm";
 import { purchaseOrder } from "./purchaseOrder.schema";
 import { vendor } from "./vendor.schema";
+import { product } from "./product.schema";
 
 export type PurchaseItemDbInsert = typeof purchaseItem.$inferInsert;
 
@@ -34,7 +35,13 @@ export const purchaseItem = sqliteTable(
 			.text("vendor_id")
 			.notNull()
 			.references(() => vendor.id),
-		cost_price: t.integer("cost_price").notNull(),
+
+		// From User
+		productId: t
+			.text("product_id")
+			.notNull()
+			.references(() => product.id),
+		cost_price: t.integer("cost_price").notNull(), // cost paid disregarding qty
 		qty: t.integer("qty").notNull(),
 		// Unlike v2, purchaseItem.totalPrice always calculated on server
 		// on client, qty always divided by product.displayDivider
@@ -72,5 +79,9 @@ export const purchaseItemRelations = relations(purchaseItem, ({ one }) => ({
 	purchaseOrder: one(purchaseOrder, {
 		fields: [purchaseItem.purchaseOrderId],
 		references: [purchaseOrder.id],
+	}),
+	product: one(product, {
+		fields: [purchaseItem.productId],
+		references: [product.id],
 	}),
 }));
