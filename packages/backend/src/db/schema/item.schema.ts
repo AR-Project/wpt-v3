@@ -6,7 +6,7 @@ import { relations } from "drizzle-orm";
 export type CreateItemDbPayload = typeof product.$inferInsert;
 
 export const product = sqliteTable(
-	"item",
+	"product",
 	(t) => ({
 		id: t.text("id").primaryKey().unique().notNull(),
 		userIdParent: t
@@ -39,13 +39,12 @@ export const product = sqliteTable(
 			.notNull(),
 	}),
 	(table) => [
-		index("item_name_idx").on(table.name),
-		index("item_owner_idx").on(table.userIdParent),
-		index("item_creator_idx").on(table.userIdCreator),
+		index("product_owner_idx").on(table.userIdParent),
+		index("product_creator_idx").on(table.userIdCreator),
 	],
 );
 
-export const itemRelations = relations(product, ({ one }) => ({
+export const productRelations = relations(product, ({ one }) => ({
 	userParent: one(user, {
 		fields: [product.userIdParent],
 		references: [user.id],
