@@ -9,7 +9,7 @@ export type CreateCategoryDbPayload = typeof category.$inferInsert;
 export const category = sqliteTable(
 	"category",
 	{
-		id: text("id").primaryKey().unique().notNull(),
+		id: text("id").primaryKey(),
 		userIdParent: text("user_id_parent")
 			.references(() => user.id, { onDelete: "cascade" })
 			.notNull(),

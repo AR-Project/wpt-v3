@@ -1,13 +1,15 @@
 import { index, sqliteTable } from "drizzle-orm/sqlite-core";
 import { user } from "./auth.schema";
 import { relations } from "drizzle-orm";
+import { purchaseOrder } from "./purchaseOrder.schema";
+import { purchaseItem } from "./purchaseItem.schema";
 
 export type VendorDbInsert = typeof vendor.$inferInsert;
 
 export const vendor = sqliteTable(
 	"vendor",
 	(t) => ({
-		id: t.text("id").primaryKey().unique().notNull(),
+		id: t.text("id").primaryKey(),
 		userIdParent: t
 			.text("user_id_parent")
 			.notNull()
@@ -37,7 +39,7 @@ export const vendor = sqliteTable(
 	],
 );
 
-export const vendorRelations = relations(vendor, ({ one }) => ({
+export const vendorRelations = relations(vendor, ({ one, many }) => ({
 	userParent: one(user, {
 		fields: [vendor.userIdParent],
 		references: [user.id],
@@ -48,4 +50,6 @@ export const vendorRelations = relations(vendor, ({ one }) => ({
 		references: [user.id],
 		relationName: "creator",
 	}),
+	purchaseOrder: many(purchaseOrder),
+	purchaseItem: many(purchaseItem),
 }));

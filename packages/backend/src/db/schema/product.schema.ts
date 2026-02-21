@@ -8,7 +8,7 @@ export type ProductDbInsert = typeof product.$inferInsert;
 export const product = sqliteTable(
 	"product",
 	(t) => ({
-		id: t.text("id").primaryKey().unique().notNull(),
+		id: t.text("id").primaryKey(),
 		userIdParent: t
 			.text("user_id_parent")
 			.notNull()
@@ -29,6 +29,10 @@ export const product = sqliteTable(
 				onDelete: "set null",
 			}),
 		sortOrder: t.integer("sort_order"),
+		// Display unit act as divider for qty.
+		// 1 means 1 qty / 1 = 1 display_qty.
+		// 100 means 100 qty / 100 = 1 display_qty
+		displayQtyDivider: t.integer("display_qty_divider").default(1),
 		createdAt: t
 			.integer("created_at", { mode: "timestamp_ms" })
 			.$defaultFn(() => new Date())
@@ -39,6 +43,7 @@ export const product = sqliteTable(
 			.notNull(),
 	}),
 	(table) => [
+		index("product_name").on(table.name),
 		index("product_owner_idx").on(table.userIdParent),
 		index("product_creator_idx").on(table.userIdCreator),
 	],
