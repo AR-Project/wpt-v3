@@ -41,8 +41,8 @@ export const purchaseItem = sqliteTable(
 			.text("product_id")
 			.notNull()
 			.references(() => product.id),
-		cost_price: t.integer("cost_price").notNull(), // cost paid disregarding qty
-		qty: t.integer("qty").notNull(),
+		costPrice: t.integer("cost_price").notNull(), // cost paid disregarding qty
+		quantity: t.integer("quantity").notNull(),
 		// Unlike v2, purchaseItem.totalPrice always calculated on server
 		// on client, qty always divided by product.displayDivider
 		sortOrder: t.integer("sort_order"),

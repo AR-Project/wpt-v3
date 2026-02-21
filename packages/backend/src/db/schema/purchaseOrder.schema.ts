@@ -33,6 +33,10 @@ export const purchaseOrder = sqliteTable(
 			.integer("created_at", { mode: "timestamp_ms" })
 			.$defaultFn(() => new Date())
 			.notNull(),
+		orderedAt: t
+			.integer("ordered_at", { mode: "timestamp_ms" })
+			.$defaultFn(() => new Date())
+			.notNull(),
 		modifiedAt: t
 			.integer("modified_at", { mode: "timestamp_ms" })
 			.$onUpdateFn(() => new Date())
