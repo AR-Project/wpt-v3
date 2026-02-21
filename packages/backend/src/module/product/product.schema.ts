@@ -3,6 +3,8 @@ import { z } from "zod";
 export const create = z.object({
 	name: z.string(),
 	categoryId: z.string().optional(),
+	displayQtyDivider: z.number().optional(),
+	displayUnitName: z.string().optional(),
 });
 export type CreateItemPayload = z.infer<typeof create>;
 
@@ -12,6 +14,8 @@ export const update = z
 		name: z.string().optional(),
 		categoryId: z.string().optional(),
 		sortOrder: z.number().optional(),
+		displayQtyDivider: z.number().optional(),
+		displayUnitName: z.string().optional(),
 	})
 	.refine(
 		(data) => {

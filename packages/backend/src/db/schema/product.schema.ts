@@ -33,6 +33,7 @@ export const product = sqliteTable(
 		// 1 means 1 qty / 1 = 1 display_qty.
 		// 100 means 100 qty / 100 = 1 display_qty
 		displayQtyDivider: t.integer("display_qty_divider").default(1),
+		displayUnitName: t.text("display_unit_name").default("pcs"),
 		createdAt: t
 			.integer("created_at", { mode: "timestamp_ms" })
 			.$defaultFn(() => new Date())
