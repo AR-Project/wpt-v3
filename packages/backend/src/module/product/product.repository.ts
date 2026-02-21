@@ -5,7 +5,7 @@ import type { NonNullableUser } from "@/lib/auth";
 import { arraysHaveEqualElements } from "@/lib/utils/array-validator";
 
 import { db } from "@/db";
-import { product, type CreateItemDbPayload } from "@/db/schema/product.schema";
+import { product, type ProductDbInsert } from "@/db/schema/product.schema";
 import type {
 	CreateItemPayload,
 	DeleteItemPayload,
@@ -31,7 +31,7 @@ export async function create(
 	return await db.transaction(async (tx) => {
 		const { name, categoryId } = payload;
 
-		const dbPayload: CreateItemDbPayload = {
+		const dbPayload: ProductDbInsert = {
 			id: `cat_${generateId(10)}`,
 			name: name,
 			categoryId: "", // updated below

@@ -1,6 +1,6 @@
 import { eq, or } from "drizzle-orm";
 import { db } from "@db/index";
-import { product, type CreateItemDbPayload } from "../schema/product.schema";
+import { product, type ProductDbInsert } from "../schema/product.schema";
 
 type CleanOption = {
 	userId?: string | null;
@@ -8,7 +8,7 @@ type CleanOption = {
 };
 
 export const productTbHelper = {
-	add: async (payload: CreateItemDbPayload) => {
+	add: async (payload: ProductDbInsert) => {
 		await db
 			.insert(product)
 			.values(payload)
