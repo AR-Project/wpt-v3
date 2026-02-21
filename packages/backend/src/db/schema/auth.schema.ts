@@ -7,7 +7,7 @@ import {
 	type AnySQLiteColumn,
 } from "drizzle-orm/sqlite-core";
 import { category } from "./category.schema";
-import { product } from "./item.schema";
+import { product } from "./product.schema";
 import { vendor } from "./vendor.schema";
 
 export type Role = "admin" | "manager" | "staff" | "guest";

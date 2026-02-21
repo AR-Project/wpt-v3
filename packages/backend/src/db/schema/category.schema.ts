@@ -2,7 +2,7 @@ import { relations } from "drizzle-orm";
 import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
 import { user } from "./auth.schema";
-import { product } from "./item.schema";
+import { product } from "./product.schema";
 
 export type CreateCategoryDbPayload = typeof category.$inferInsert;
 

@@ -5,7 +5,7 @@ import type { NonNullableUser } from "@/lib/auth";
 import { arraysHaveEqualElements } from "@/lib/utils/array-validator";
 
 import { db } from "@/db";
-import { product, type CreateItemDbPayload } from "@/db/schema/item.schema";
+import { product, type CreateItemDbPayload } from "@/db/schema/product.schema";
 import type {
 	CreateItemPayload,
 	DeleteItemPayload,

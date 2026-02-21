@@ -1,6 +1,6 @@
 import { eq, or } from "drizzle-orm";
 import { db } from "@db/index";
-import { product, type CreateItemDbPayload } from "../schema/item.schema";
+import { product, type CreateItemDbPayload } from "../schema/product.schema";
 
 type CleanOption = {
 	userId?: string | null;

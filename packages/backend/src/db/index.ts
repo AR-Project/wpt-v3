@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 
 import * as authSchema from "@db/schema/auth.schema";
 import * as categorySchema from "@db/schema/category.schema";
-import * as itemSchema from "@db/schema/item.schema";
+import * as productSchema from "@/db/schema/product.schema";
 import * as vendorSchema from "@db/schema/vendor.schema";
 
 const dbFileName = Bun.env.DB_FILE_NAME;
@@ -26,7 +26,7 @@ export const db = drizzle(sqlite, {
 	schema: {
 		...authSchema,
 		...categorySchema,
-		...itemSchema,
+		...productSchema,
 		...vendorSchema,
 	},
 });
