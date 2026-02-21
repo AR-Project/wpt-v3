@@ -3,10 +3,7 @@ import { drizzle } from "drizzle-orm/bun-sqlite";
 import { dirname, isAbsolute, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import * as authSchema from "@db/schema/auth.schema";
-import * as categorySchema from "@db/schema/category.schema";
-import * as productSchema from "@/db/schema/product.schema";
-import * as vendorSchema from "@db/schema/vendor.schema";
+import * as schema from "@db/schema";
 
 const dbFileName = Bun.env.DB_FILE_NAME;
 if (!dbFileName) throw new Error("DB_FILE_NAME is required");
@@ -23,12 +20,7 @@ const dbPath = isAbsolute(dbFileName)
 
 const sqlite = new Database(dbPath);
 export const db = drizzle(sqlite, {
-	schema: {
-		...authSchema,
-		...categorySchema,
-		...productSchema,
-		...vendorSchema,
-	},
+	schema,
 });
 
 export type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
