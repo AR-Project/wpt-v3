@@ -29,6 +29,7 @@ export const purchaseOrder = sqliteTable(
 			.notNull()
 			.references(() => vendor.id),
 		totalCost: t.integer("total_cost").notNull(),
+		imageId: t.text("image_id"),
 		createdAt: t
 			.integer("created_at", { mode: "timestamp_ms" })
 			.$defaultFn(() => new Date())
