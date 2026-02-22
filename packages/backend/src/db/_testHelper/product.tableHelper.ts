@@ -4,7 +4,7 @@ import { product, type ProductDbInsert } from "../schema/product.schema";
 
 type CleanOption = {
 	userId?: string | null;
-	itemId?: string | null;
+	productId?: string | null;
 };
 
 export const productTbHelper = {
@@ -14,7 +14,7 @@ export const productTbHelper = {
 			.values(payload)
 			.returning({ id: product.id, name: product.name });
 	},
-	find: async (userId: string) => {
+	findByUserId: async (userId: string) => {
 		return await db.query.product.findMany({
 			where: (product, { eq, or }) =>
 				or(eq(product.userIdCreator, userId), eq(product.userIdParent, userId)),
@@ -29,7 +29,7 @@ export const productTbHelper = {
 	clean: async (option?: CleanOption) => {
 		const filter = () => {
 			if (!option) return undefined;
-			if (option.itemId) return eq(product.id, option.itemId);
+			if (option.productId) return eq(product.id, option.productId);
 			if (option.userId)
 				return or(
 					eq(product.userIdCreator, option.userId),

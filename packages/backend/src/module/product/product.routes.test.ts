@@ -54,7 +54,7 @@ describe("product route", () => {
 		});
 
 		afterAll(async () => {
-			await productTbHelper.clean({ itemId: itemIdToGet });
+			await productTbHelper.clean({ productId: itemIdToGet });
 		});
 
 		test.serial("should fail when accessing category signed out", async () => {
@@ -110,7 +110,7 @@ describe("product route", () => {
 			expect(resJson.categoryId).toBe(defaultCategoryId);
 
 			// cleanup
-			await productTbHelper.clean({ itemId: resJson.id });
+			await productTbHelper.clean({ productId: resJson.id });
 		});
 
 		test.serial("should fail when category is not exist", async () => {
@@ -164,7 +164,7 @@ describe("product route", () => {
 			expect(resJson.categoryId).toBe("cat_mock123");
 			expect(resJson.name).toBe("post-item-with-different-category");
 
-			await productTbHelper.clean({ itemId: resJson.id });
+			await productTbHelper.clean({ productId: resJson.id });
 			await categoryTbHelper.clean({ categoryId: mockCategory.id });
 		});
 	});
@@ -214,7 +214,7 @@ describe("product route", () => {
 			expect(json.message).toBe("user not allowed");
 
 			// cleaning up second user
-			await productTbHelper.clean({ itemId: "item_123" });
+			await productTbHelper.clean({ productId: "item_123" });
 			await categoryTbHelper.clean({ categoryId: newUser.defaultCategoryId });
 			await authTableHelper.clean({ userId: newUser.id });
 		});
@@ -286,7 +286,7 @@ describe("product route", () => {
 			expect(updatedItem[0]?.name).toBe("new-name-user-item");
 			expect(updatedItem[0]?.categoryId).toBe("cat_for-item-patch123");
 
-			await productTbHelper.clean({ itemId: itemIdTobeUpdate });
+			await productTbHelper.clean({ productId: itemIdTobeUpdate });
 			await categoryTbHelper.clean({ categoryId: "cat_for-item-patch123" });
 		});
 
@@ -312,7 +312,7 @@ describe("product route", () => {
 				}),
 			});
 			expect(res.status).toBe(400);
-			await productTbHelper.clean({ itemId: itemIdTobeUpdate });
+			await productTbHelper.clean({ productId: itemIdTobeUpdate });
 		});
 	});
 
@@ -392,9 +392,9 @@ describe("product route", () => {
 			expect(item000?.sortOrder).toBe(2);
 
 			await Promise.all([
-				productTbHelper.clean({ itemId: "item_order-000" }),
-				productTbHelper.clean({ itemId: "item_order-001" }),
-				productTbHelper.clean({ itemId: "item_order-002" }),
+				productTbHelper.clean({ productId: "item_order-000" }),
+				productTbHelper.clean({ productId: "item_order-001" }),
+				productTbHelper.clean({ productId: "item_order-002" }),
 			]);
 		});
 	});
