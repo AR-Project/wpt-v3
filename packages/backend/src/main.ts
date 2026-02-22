@@ -9,6 +9,7 @@ import { profileRoute } from "@module/profile/profile.routes";
 import { categoryRoute } from "@module/category/category.routes";
 import { productRoute } from "@/module/product/product.routes";
 import { vendorRoute } from "@/module/vendor/vendor.routes";
+import { purchaseOrderRoute } from "./module/purchase-order/purchase-order.route";
 
 const conditionalLogger = () => {
 	return process.env.NODE_ENV === "test"
@@ -25,6 +26,7 @@ export const app = new Hono()
 	.route("/category", categoryRoute)
 	.route("/product", productRoute)
 	.route("/vendor", vendorRoute)
+	.route("/purchase-order", purchaseOrderRoute)
 	.get("/hello", async (c) => c.json({ message: "hello from api" }))
 	.onError((error, c) => {
 		if (error instanceof HTTPException)
