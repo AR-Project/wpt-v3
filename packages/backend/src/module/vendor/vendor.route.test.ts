@@ -190,9 +190,8 @@ describe("vendor route", () => {
 		});
 	});
 
+	// TODO: Patch Route test
 	/**
-
-  
 
   test("PATCH should fail with incorrect payload", async () => {
     const res = await app.request("/api/category", {

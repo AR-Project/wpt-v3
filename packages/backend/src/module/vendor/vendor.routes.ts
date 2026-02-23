@@ -27,3 +27,5 @@ export const vendorRoute = new Hono<{ Variables: ProtectedType }>({
 		await vendorRepo.remove(payload, user);
 		return c.json({ message: "ok" }, 200);
 	});
+
+// TODO: patch route
