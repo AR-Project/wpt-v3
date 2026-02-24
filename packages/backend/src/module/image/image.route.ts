@@ -1,17 +1,18 @@
 import { Hono } from "hono";
+import { serveStatic } from "hono/bun";
+import { eq } from "drizzle-orm";
+import { HTTPException } from "hono/http-exception";
 
 import { authProtectedMiddleware } from "@/middleware/auth.middleware";
 
 import type { ProtectedType } from "@lib/auth";
 import { zValidator } from "@/lib/validator-wrapper";
-import * as imageSchema from "@/module/image/image.schema";
-import { HTTPException } from "hono/http-exception";
-import { resolveFromRoot } from "@/lib/utils/file";
 import { generateId } from "@/lib/idGenerator";
+import { resolveFromRoot } from "@/lib/utils/file";
 import { db } from "@/db";
 import { image, type ImageDbInsert } from "@/db/schema";
-import { eq } from "drizzle-orm";
-import { serveStatic } from "hono/bun";
+
+import * as imageSchema from "@/module/image/image.schema";
 
 const IMAGE_URL_PREFIX = "/api/image/file";
 export const IMAGE_SERVER_PATH_PREFIX = "runtime-assets";
