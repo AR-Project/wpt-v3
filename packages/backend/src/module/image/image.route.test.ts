@@ -15,6 +15,7 @@ import * as imageTbHelper from "@db/_testHelper/image.tableHelper";
 import { resolveFromRoot } from "@/lib/utils/file";
 
 import { resolve } from "node:path";
+import { IMAGE_SERVER_PATH_PREFIX } from "./image.route";
 
 describe("image route", () => {
 	let currentUserId: string = "";
@@ -77,7 +78,7 @@ describe("image route", () => {
 			const pathOnServer = resJson.url.split("/").slice(4);
 			const imageRecords = await imageTbHelper.findById(resJson.id);
 			const fileOnServer = Bun.file(
-				resolveFromRoot("runtime-assets", ...pathOnServer),
+				resolveFromRoot(IMAGE_SERVER_PATH_PREFIX, ...pathOnServer),
 			);
 
 			// assert

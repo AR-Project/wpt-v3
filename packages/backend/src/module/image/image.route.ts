@@ -12,6 +12,9 @@ import { db } from "@/db";
 import { image, type ImageDbInsert } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
+const IMAGE_URL_PREFIX = "/api/image/file";
+export const IMAGE_SERVER_PATH_PREFIX = "runtime-assets";
+
 export const imageRoute = new Hono<{ Variables: ProtectedType }>({
 	strict: false,
 })
@@ -31,7 +34,7 @@ export const imageRoute = new Hono<{ Variables: ProtectedType }>({
 		const monthStr = timestamp.getMonth().toString();
 		const dateStr = timestamp.getDate().toString();
 
-		const url = `/api/image/file/${yearString}/${monthStr}/${dateStr}/${fileName}`;
+		const url = `${IMAGE_URL_PREFIX}/${yearString}/${monthStr}/${dateStr}/${fileName}`;
 
 		const filePath = resolveFromRoot(
 			"runtime-assets",
