@@ -11,6 +11,7 @@ import { generateId } from "@/lib/idGenerator";
 import { db } from "@/db";
 import { image, type ImageDbInsert } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { serveStatic } from "hono/bun";
 
 const IMAGE_URL_PREFIX = "/api/image/file";
 export const IMAGE_SERVER_PATH_PREFIX = "runtime-assets";
@@ -18,6 +19,13 @@ export const IMAGE_SERVER_PATH_PREFIX = "runtime-assets";
 export const imageRoute = new Hono<{ Variables: ProtectedType }>({
 	strict: false,
 })
+	.use(
+		"/file/*", // "/api/image" from main.ts + "/file"
+		serveStatic({
+			root: resolveFromRoot(IMAGE_SERVER_PATH_PREFIX),
+			rewriteRequestPath: (path) => path.slice(IMAGE_URL_PREFIX.length),
+		}),
+	)
 	.use(authProtectedMiddleware)
 	.post("/", zValidator("form", imageSchema.create), async (c) => {
 		const payload = c.req.valid("form");

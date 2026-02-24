@@ -96,6 +96,38 @@ describe("image route", () => {
 		});
 	});
 
+	describe("GET", () => {
+		test.serial("should success", async () => {
+			// prepare
+			const imageMetadata = await imageUploaderHelper(cookie, app);
+			const pathOnServer = imageMetadata.url.split("/").slice(4);
+			const fileOnServer = Bun.file(
+				resolveFromRoot(IMAGE_SERVER_PATH_PREFIX, ...pathOnServer),
+			);
+
+			// action
+			const res = await app.request(imageMetadata.url, {
+				method: "GET",
+			});
+
+			// cleanup before assert
+			await Promise.all([
+				fileOnServer.delete(),
+				imageTbHelper.clean({ imageId: imageMetadata.id }),
+			]);
+
+			expect(res.status).toBe(200);
+
+			const contentType = res.headers.get("Content-Type");
+			expect(contentType).toBe("image/jpeg");
+
+			// 4. Verify the body is a valid Blob/Image
+			const blob = await res.blob();
+			expect(blob.size).toBeGreaterThan(0);
+			expect(blob.type).toBe("image/jpeg");
+		});
+	});
+
 	describe.skip("DELETE", () => {
 		test.serial("should success", async () => {
 			const res = await app.request("/api/image", {
@@ -112,7 +144,10 @@ describe("image route", () => {
 	});
 });
 
-async function imageUploaderHelper(cookie: string, appInstance: typeof app) {
+export async function imageUploaderHelper(
+	cookie: string,
+	appInstance: typeof app,
+) {
 	const testFilePath = resolve(import.meta.dir, "./test-assets/test-image.jpg");
 	const fileToUpload = Bun.file(testFilePath);
 
