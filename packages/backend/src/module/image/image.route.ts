@@ -109,4 +109,34 @@ export const imageRoute = new Hono<{ Variables: ProtectedType }>({
 		});
 
 		return c.json({ message: "image deleted" });
+	})
+	.get("/", async (c) => {
+		const user = c.get("user");
+		const images = await db.query.image.findMany({
+			where: (image, { or, eq }) =>
+				or(
+					eq(image.userIdCreator, user.id),
+					eq(image.userIdParent, user.parentId),
+				),
+		});
+
+		return c.json(images);
+	})
+	.get("/:imageId", async (c) => {
+		const user = c.get("user");
+		const imageId = c.req.param("imageId");
+
+		const images = await db.query.image.findFirst({
+			where: (image, { or, and, eq }) =>
+				and(
+					or(
+						eq(image.userIdCreator, user.id),
+						eq(image.userIdParent, user.parentId),
+					),
+					eq(image.id, imageId),
+				),
+		});
+		if (!images) throw new HTTPException(404, { message: "image not found" });
+
+		return c.json(images);
 	});

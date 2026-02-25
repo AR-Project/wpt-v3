@@ -6,15 +6,15 @@ import {
 	expect,
 	test,
 } from "bun:test";
+import { resolve } from "node:path";
 
 import { app } from "@/main";
+import type { ImageDBRecord } from "@/db/schema";
 import { authTableHelper } from "@/db/_testHelper/authDbHelper";
-import { signUpSignInHelper } from "../auth/auth.routes.test.helper";
-
 import * as imageTbHelper from "@db/_testHelper/image.tableHelper";
 import { resolveFromRoot } from "@/lib/utils/file";
 
-import { resolve } from "node:path";
+import { signUpSignInHelper } from "../auth/auth.routes.test.helper";
 import { IMAGE_SERVER_PATH_PREFIX } from "./image.route";
 
 describe("image route", () => {
@@ -128,25 +128,32 @@ describe("image route", () => {
 		});
 	});
 
-	describe("GET", () => {
-		test.serial("should success", async () => {
-			// prepare
+	describe.serial("GET", () => {
+		let currentImageId: string = "";
+		let currentImageUrl: string = "";
+
+		beforeAll(async () => {
 			const imageMetadata = await imageUploaderHelper(cookie, app);
-			const pathOnServer = imageMetadata.url.split("/").slice(4);
+			currentImageId = imageMetadata.id;
+			currentImageUrl = imageMetadata.url;
+		});
+
+		afterAll(async () => {
+			const pathOnServer = currentImageUrl.split("/").slice(4);
 			const fileOnServer = Bun.file(
 				resolveFromRoot(IMAGE_SERVER_PATH_PREFIX, ...pathOnServer),
 			);
-
-			// action
-			const res = await app.request(imageMetadata.url, {
-				method: "GET",
-			});
-
-			// cleanup before assert
 			await Promise.all([
 				fileOnServer.delete(),
-				imageTbHelper.clean({ imageId: imageMetadata.id }),
+				imageTbHelper.clean({ imageId: currentImageId }),
 			]);
+		});
+
+		test.concurrent("should success getting file with direct Image URL", async () => {
+			// action
+			const res = await app.request(currentImageUrl, {
+				method: "GET",
+			});
 
 			expect(res.status).toBe(200);
 
@@ -157,6 +164,47 @@ describe("image route", () => {
 			const blob = await res.blob();
 			expect(blob.size).toBeGreaterThan(0);
 			expect(blob.type).toBe("image/jpeg");
+		});
+		test.concurrent("should success geting user images metadata", async () => {
+			const res = await app.request("/api/image", {
+				method: "GET",
+				headers: {
+					"Content-Type": "application/json",
+					Cookie: cookie,
+				},
+			});
+			const resJson = (await res.json()) as ImageDBRecord[];
+			expect(res.status).toBe(200);
+			expect(resJson.length).toBe(1);
+			expect(resJson[0]?.id).toBe(currentImageId);
+			expect(resJson[0]?.url).toBe(currentImageUrl);
+		});
+
+		test.concurrent("should success geting image metadata", async () => {
+			const res = await app.request(`/api/image/${currentImageId}`, {
+				method: "GET",
+				headers: {
+					"Content-Type": "application/json",
+					Cookie: cookie,
+				},
+			});
+			const resJson = (await res.json()) as ImageDBRecord;
+			expect(res.status).toBe(200);
+			expect(resJson.id).toBe(currentImageId);
+			expect(resJson.url).toBe(currentImageUrl);
+		});
+
+		test.concurrent("should fail with invalid id", async () => {
+			const res = await app.request(`/api/image/im_invalidId`, {
+				method: "GET",
+				headers: {
+					"Content-Type": "application/json",
+					Cookie: cookie,
+				},
+			});
+			const resJson = (await res.json()) as { message: string };
+			expect(res.status).toBe(404);
+			expect(resJson.message).toBe("image not found");
 		});
 	});
 
