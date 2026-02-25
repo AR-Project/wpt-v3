@@ -32,9 +32,6 @@ export const imageRoute = new Hono<{ Variables: ProtectedType }>({
 		const payload = c.req.valid("form");
 		const user = c.get("user");
 
-		let isDatabaseWriten: boolean = false;
-		let isFileWriten: boolean = false;
-
 		const timestamp = new Date();
 		const currentImageId = `im_${generateId(15)}`;
 		const fileName = `${currentImageId}.jpg`;
@@ -62,6 +59,9 @@ export const imageRoute = new Hono<{ Variables: ProtectedType }>({
 			createdAt: timestamp,
 		};
 
+		let isDatabaseWriten: boolean = false;
+		let isFileWriten: boolean = false;
+
 		try {
 			await db.insert(image).values(imageDbPayload);
 			isDatabaseWriten = true;
@@ -72,13 +72,9 @@ export const imageRoute = new Hono<{ Variables: ProtectedType }>({
 			console.log(error);
 
 			// rollback
-			if (isFileWriten) {
-				await Bun.file(filePath).delete();
-			}
-
-			if (isDatabaseWriten) {
+			if (isFileWriten) await Bun.file(filePath).delete();
+			if (isDatabaseWriten)
 				await db.delete(image).where(eq(image.id, currentImageId));
-			}
 
 			throw new HTTPException(500, { message: "internal error" });
 		}
