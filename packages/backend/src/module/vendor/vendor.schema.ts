@@ -7,7 +7,7 @@ export type CreatePayload = z.infer<typeof create>;
 
 export const update = z.object({
 	id: z.string(),
-	name: z.string().optional(),
+	name: z.string(),
 });
 export type UpdatePayload = z.infer<typeof update>;
 
