@@ -49,3 +49,23 @@ export async function remove(payload: { id: string }, user: NonNullableUser) {
 		await tx.delete(vendor).where(eq(vendor.id, payload.id));
 	});
 }
+export async function update(
+	payload: { id: string; name: string },
+	user: NonNullableUser,
+) {
+	await db.transaction(async (tx) => {
+		const vendorToDelete = await tx.query.vendor.findFirst({
+			where: (vendor, { eq }) => eq(vendor.id, payload.id),
+		});
+		if (!vendorToDelete)
+			throw new HTTPException(404, { message: "vendor not exist" });
+
+		if (vendorToDelete.userIdParent !== user.parentId)
+			throw new HTTPException(403, { message: "user not allowed" });
+
+		await tx
+			.update(vendor)
+			.set({ name: payload.name })
+			.where(eq(vendor.id, payload.id));
+	});
+}

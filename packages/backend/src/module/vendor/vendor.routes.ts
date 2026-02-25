@@ -26,6 +26,12 @@ export const vendorRoute = new Hono<{ Variables: ProtectedType }>({
 		const user = c.get("user");
 		await vendorRepo.remove(payload, user);
 		return c.json({ message: "ok" }, 200);
+	})
+	.patch("/", zValidator("json", vendorSchema.update), async (c) => {
+		const payload = c.req.valid("json");
+		const user = c.get("user");
+		await vendorRepo.update(payload, user);
+		return c.json({ message: "ok" }, 200);
 	});
 
 // TODO: patch route

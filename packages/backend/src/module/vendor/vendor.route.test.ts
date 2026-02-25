@@ -190,61 +190,58 @@ describe("vendor route", () => {
 		});
 	});
 
-	// TODO: Patch Route test
-	/**
+	describe("PATCH", () => {
+		test.serial("should success and persist data", async () => {
+			const createPayload = {
+				name: "update-vendor",
+			};
 
-  test("PATCH should fail with incorrect payload", async () => {
-    const res = await app.request("/api/category", {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-        Cookie: cookie,
-      },
-      body: JSON.stringify({ id: "not-exist-id" }),
-    });
+			const createRes = await app.request("/api/vendor", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					Cookie: cookie,
+				},
+				body: JSON.stringify(createPayload),
+			});
 
-    expect(res.status).toBe(400);
-  });
+			const createResJson = (await createRes.json()) as {
+				id: string;
+				name: string;
+			};
 
-  test("PATCH should success and persist data", async () => {
-    const payload = {
-      name: "update-category",
-    };
+			const res = await app.request("/api/vendor", {
+				method: "PATCH",
+				headers: {
+					"Content-Type": "application/json",
+					Cookie: cookie,
+				},
+				body: JSON.stringify({
+					id: createResJson.id,
+					name: "update-vendor-new-name",
+				}),
+			});
 
-    const postRes = await app.request("/api/category", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Cookie: cookie,
-      },
-      body: JSON.stringify(payload),
-    });
+			expect(res.status).toBe(200);
+			const category = await vendorTbHelper.findById(createResJson.id);
 
-    const postResJson = (await postRes.json()) as {
-      id: string;
-      name: string;
-    };
+			expect(category.length).toBe(1);
+			expect(category[0]?.name).toBe("update-vendor-new-name");
 
-    const res = await app.request("/api/category", {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-        Cookie: cookie,
-      },
-      body: JSON.stringify({
-        id: postResJson.id,
-        name: "update-category-new-name",
-      }),
-    });
+			await vendorTbHelper.clean({ vendorId: createResJson.id });
+		});
 
-    expect(res.status).toBe(200);
-    const category = await categoryTbHelper.findById(postResJson.id);
+		test.serial("should fail with incorrect payload", async () => {
+			const res = await app.request("/api/vendor", {
+				method: "PATCH",
+				headers: {
+					"Content-Type": "application/json",
+					Cookie: cookie,
+				},
+				body: JSON.stringify({ id: "not-exist-id" }),
+			});
 
-    expect(category.length).toBe(1);
-    expect(category[0]?.name).toBe("update-category-new-name");
-
-    await categoryTbHelper.clean({ categoryId: postResJson.id });
-  });
-
-   */
+			expect(res.status).toBe(400);
+		});
+	});
 });
