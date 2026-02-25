@@ -1,6 +1,9 @@
-import { index, sqliteTable } from "drizzle-orm/sqlite-core";
-import { user } from "./auth.schema";
 import { relations } from "drizzle-orm";
+import { index, sqliteTable } from "drizzle-orm/sqlite-core";
+
+import { user } from "./auth.schema";
+import { product } from "./product.schema";
+import { purchaseOrder } from "./purchaseOrder.schema";
 
 export type ImageDbInsert = typeof image.$inferInsert;
 export type ImageDBRecord = typeof image.$inferSelect;
@@ -34,7 +37,7 @@ export const image = sqliteTable(
 	],
 );
 
-export const imageRelations = relations(image, ({ one }) => ({
+export const imageRelations = relations(image, ({ one, many }) => ({
 	userParent: one(user, {
 		fields: [image.userIdParent],
 		references: [user.id],
@@ -45,4 +48,6 @@ export const imageRelations = relations(image, ({ one }) => ({
 		references: [user.id],
 		relationName: "creator",
 	}),
+	product: many(product),
+	purchaseOrder: many(purchaseOrder),
 }));

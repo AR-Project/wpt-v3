@@ -1,10 +1,13 @@
+import { relations } from "drizzle-orm";
 import { index, sqliteTable } from "drizzle-orm/sqlite-core";
+
 import { user } from "./auth.schema";
 import { category } from "./category.schema";
-import { relations } from "drizzle-orm";
 import { purchaseItem } from "./purchaseItem.schema";
+import { image } from "./image.schema";
 
 export type ProductDbInsert = typeof product.$inferInsert;
+export type ProductDBRecord = typeof product.$inferSelect;
 
 export const product = sqliteTable(
 	"product",
@@ -29,6 +32,9 @@ export const product = sqliteTable(
 			.references(() => category.id, {
 				onDelete: "set null",
 			}),
+		imageId: t.text("image_id").references(() => image.id, {
+			onDelete: "set null",
+		}),
 		sortOrder: t.integer("sort_order"),
 		// Display unit act as divider for qty.
 		// 1 means 1 qty / 1 = 1 display_qty.
@@ -65,6 +71,10 @@ export const productRelations = relations(product, ({ one, many }) => ({
 	category: one(category, {
 		fields: [product.categoryId],
 		references: [category.id],
+	}),
+	image: one(image, {
+		fields: [product.imageId],
+		references: [image.id],
 	}),
 	purchaseItem: many(purchaseItem),
 }));

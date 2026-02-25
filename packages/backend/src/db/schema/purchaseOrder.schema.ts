@@ -1,10 +1,10 @@
-//  purchase_orders	: id, supplier_id, status, total_cost
-
-import { index, sqliteTable } from "drizzle-orm/sqlite-core";
-import { user } from "./auth.schema";
 import { relations } from "drizzle-orm";
+import { index, sqliteTable } from "drizzle-orm/sqlite-core";
+
+import { user } from "./auth.schema";
 import { vendor } from "./vendor.schema";
 import { purchaseItem } from "./purchaseItem.schema";
+import { image } from "./image.schema";
 
 export type PurchaseOrderDbInsert = typeof purchaseOrder.$inferInsert;
 
@@ -29,7 +29,9 @@ export const purchaseOrder = sqliteTable(
 			.notNull()
 			.references(() => vendor.id),
 		totalCost: t.integer("total_cost").notNull(),
-		imageId: t.text("image_id"),
+		imageId: t.text("image_id").references(() => image.id, {
+			onDelete: "set null",
+		}),
 		createdAt: t
 			.integer("created_at", { mode: "timestamp_ms" })
 			.$defaultFn(() => new Date())
@@ -65,6 +67,10 @@ export const purchaseOrderRelations = relations(
 		vendor: one(vendor, {
 			fields: [purchaseOrder.vendorId],
 			references: [vendor.id],
+		}),
+		image: one(image, {
+			fields: [purchaseOrder.imageId],
+			references: [image.id],
 		}),
 		purchaseItem: many(purchaseItem),
 	}),
