@@ -3,6 +3,7 @@ import { user } from "./auth.schema";
 import { relations } from "drizzle-orm";
 
 export type ImageDbInsert = typeof image.$inferInsert;
+export type ImageDBRecord = typeof image.$inferSelect;
 
 export const image = sqliteTable(
 	"image",
