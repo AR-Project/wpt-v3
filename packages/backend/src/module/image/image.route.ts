@@ -80,4 +80,33 @@ export const imageRoute = new Hono<{ Variables: ProtectedType }>({
 		}
 
 		return c.json({ id: currentImageId, url }, 201);
+	})
+	.delete("/", zValidator("json", imageSchema.remove), async (c) => {
+		const payload = c.req.valid("json");
+		const user = c.get("user");
+
+		await db.transaction(async (tx) => {
+			const imageToDelete = await tx.query.image.findFirst({
+				where: (image, { eq, and }) =>
+					and(eq(image.id, payload.id), eq(image.userIdCreator, user.id)),
+			});
+
+			if (!imageToDelete)
+				throw new HTTPException(404, { message: "image not found" });
+
+			try {
+				await Bun.file(
+					resolveFromRoot(
+						IMAGE_SERVER_PATH_PREFIX,
+						...imageToDelete.url.slice(IMAGE_URL_PREFIX.length + 1).split("/"),
+					),
+				).delete();
+			} catch (_) {
+				throw new HTTPException(500, { message: "fail to delete image files" });
+			}
+
+			await tx.delete(image).where(eq(image.id, payload.id));
+		});
+
+		return c.json({ message: "image deleted" });
 	});

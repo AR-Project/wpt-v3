@@ -160,18 +160,20 @@ describe("image route", () => {
 		});
 	});
 
-	describe.skip("DELETE", () => {
+	describe("DELETE", () => {
 		test.serial("should success", async () => {
+			const imageMetadata = await imageUploaderHelper(cookie, app);
+
 			const res = await app.request("/api/image", {
 				method: "DELETE",
 				headers: {
 					"Content-Type": "application/json",
 					Cookie: cookie,
 				},
-				body: JSON.stringify({ id: "vendor_delete123" }),
+				body: JSON.stringify({ id: imageMetadata.id }),
 			});
 
-			// TODO
+			expect(res.status).toBe(200);
 		});
 	});
 });
