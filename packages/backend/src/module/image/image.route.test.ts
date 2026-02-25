@@ -94,6 +94,38 @@ describe("image route", () => {
 				imageTbHelper.clean({ imageId: resJson.id }),
 			]);
 		});
+
+		test.serial("should fail when image is not a jpeg file ", async () => {
+			const testFilePath = resolve(
+				import.meta.dir,
+				"./test-assets/invalid-file.jpg",
+			);
+			const fileToUpload = Bun.file(testFilePath);
+
+			// Check if the file actually exists before running the test
+			if (!(await fileToUpload.exists())) {
+				throw new Error(
+					`Test file not found at ${testFilePath}. Please add a real image there!`,
+				);
+			}
+
+			const realImage = new File(
+				[await fileToUpload.arrayBuffer()],
+				"invalid.jpg",
+				{ type: "image/jpeg" },
+			);
+
+			const formData = new FormData();
+			formData.append("image", realImage);
+
+			const categoryRes = await app.request("/api/image", {
+				method: "POST",
+				headers: { Cookie: cookie },
+				body: formData,
+			});
+
+			expect(categoryRes.status).toBe(400);
+		});
 	});
 
 	describe("GET", () => {
