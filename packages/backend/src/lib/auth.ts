@@ -1,6 +1,6 @@
 import { betterAuth } from "better-auth/minimal";
 import { eq } from "drizzle-orm";
-import { admin } from "better-auth/plugins";
+import { admin as adminPlugin } from "better-auth/plugins";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 
 import { db } from "@db/index";
@@ -11,15 +11,20 @@ import { createCategoryTx } from "@/module/category/category.repository";
 
 import type { EnsureNonNullable } from "./types-helper";
 import { generateId } from "./idGenerator";
+import { ac, admin, staff } from "./auth/permission";
 
 export const auth = betterAuth({
 	database: drizzleAdapter(db, {
 		provider: "sqlite", // or "mysql", "sqlite"
 	}),
 	plugins: [
-		admin({
+		adminPlugin({
 			defaultRole: "admin",
-			// TODO: define roles https://www.better-auth.com/docs/plugins/admin#custom-permissions
+			ac,
+			roles: {
+				admin,
+				staff,
+			},
 		}),
 	],
 	trustedOrigins: [

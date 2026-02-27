@@ -40,7 +40,7 @@ export const profileRoute = new Hono<{ Variables: ProtectedType }>({
 				email,
 				password,
 				name,
-				role: "user" as const,
+				role: "staff" as const,
 				data: {
 					parentId: user.id,
 					defaultCategoryId: user.defaultCategoryId,
