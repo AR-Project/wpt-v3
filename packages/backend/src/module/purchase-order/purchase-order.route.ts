@@ -20,3 +20,8 @@ export const purchaseOrderRoute = new Hono<{ Variables: ProtectedType }>({
 
 		return c.json({ message: `Success`, data: purchaseOrderId }, 201);
 	});
+
+// TODO: Endpoint for update purchase items "sortOrder" (bulk update) - main entity is still purchase Order.
+
+// TODO: Endpoint for update purchaseOrder information (vendor, orderedAt, imageId) - but prevent total cost.
+// Total cost should be calculated, and become side effect when updating "purchase item"

@@ -43,6 +43,8 @@ export const categoryRoute = new Hono<{ Variables: ProtectedType }>({
 			userIdCreator: user.id,
 		};
 
+		// TODO: Implement optional create category and update productId on it.
+
 		const [createdCategory] = await db
 			.insert(category)
 			.values(dbPayload)

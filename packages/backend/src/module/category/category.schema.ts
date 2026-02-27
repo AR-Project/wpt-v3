@@ -2,6 +2,7 @@ import { z } from "zod";
 
 export const createCategorySchema = z.object({
 	name: z.string().min(3),
+	productId: z.string().optional(),
 });
 export type CreateCategoryPayload = z.infer<typeof createCategorySchema>;
 

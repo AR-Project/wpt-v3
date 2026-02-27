@@ -22,13 +22,21 @@ export const app = new Hono()
 	.basePath("/api")
 	.use(conditionalLogger())
 	.use(trimTrailingSlash())
+
+	// Master Data
 	.route("/auth", authRoute)
-	.route("/profile", profileRoute)
+	.route("/vendor", vendorRoute)
 	.route("/category", categoryRoute)
 	.route("/product", productRoute)
-	.route("/vendor", vendorRoute)
-	.route("/purchase-order", purchaseOrderRoute)
+	.route("/profile", profileRoute)
 	.route("/image", imageRoute)
+
+	// Transactional Data
+	.route("/purchase-order", purchaseOrderRoute)
+
+	// TODO: "/restock-order" endpont (formerly "plan")
+
+	// Other
 	.get("/hello", async (c) => c.json({ message: "hello from api" }))
 	.onError((error, c) => {
 		if (error instanceof HTTPException)

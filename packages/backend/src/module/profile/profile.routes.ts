@@ -54,3 +54,21 @@ export const profileRoute = new Hono<{ Variables: ProtectedType }>({
 			return c.json({ message: "user created", user: childUser }, 201);
 		},
 	);
+
+// TODO: Implement new endpoint
+
+/**
+ * TODO - Endpoint for:
+ * - update self information (name)
+ *
+ * - update child user password
+ * - update child user information (name, email, image)
+ * - get child users sessions (sessions state)
+ * - ban
+ * - unban
+ * -
+ *
+ * NO NEED TODO - prefer to use auth api:
+ * - update self information - https://www.better-auth.com/docs/concepts/users-accounts#update-user-information
+ * - update self password - https://www.better-auth.com/docs/concepts/users-accounts#change-password
+ */
