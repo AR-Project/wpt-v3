@@ -16,6 +16,7 @@ export const update = z
 		sortOrder: z.number().optional(),
 		displayQtyDivider: z.number().optional(),
 		displayUnitName: z.string().optional(),
+		imageId: z.string().optional(),
 	})
 	.refine(
 		(data) => {
