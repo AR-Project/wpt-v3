@@ -72,7 +72,6 @@ export const profileRoute = new Hono<{ Variables: ProtectedType }>({
 
 /**
  * TODO - Endpoint for:
- * - revoke sessions
  * - update child user password - Implementation done, TODO TEST
  * - update child user information (name, email, image)
  * - get child users sessions (sessions state)
