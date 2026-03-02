@@ -6,6 +6,7 @@ import { auth, type ProtectedType } from "@lib/auth";
 
 import * as profileSchema from "./profile.schema";
 import { HTTPException } from "hono/http-exception";
+import { db } from "@/db";
 
 export const profileRoute = new Hono<{ Variables: ProtectedType }>({
 	strict: false,
@@ -42,12 +43,36 @@ export const profileRoute = new Hono<{ Variables: ProtectedType }>({
 
 			return c.json({ message: "user created", user: childUser }, 201);
 		},
-	);
+	)
+	.delete("/children/:childId/sessions", async (c) => {
+		const { childId } = c.req.param();
+		const user = c.get("user");
+
+		if (user.parentId !== user.id)
+			throw new HTTPException(403, { message: "role not allowed" });
+
+		const userOnDb = await db.query.user.findFirst({
+			where: (userRow, { eq }) => eq(userRow.id, childId),
+		});
+
+		if (!userOnDb)
+			throw new HTTPException(404, { message: "child user not found" });
+
+		await auth.api.revokeUserSessions({
+			body: {
+				userId: childId, // required
+			},
+			// This endpoint requires session cookies.
+			headers: c.req.raw.headers,
+		});
+		return c.body(null, 204);
+	});
 
 // TODO: Implement new endpoint
 
 /**
  * TODO - Endpoint for:
+ * - revoke sessions
  * - update child user password - Implementation done, TODO TEST
  * - update child user information (name, email, image)
  * - get child users sessions (sessions state)
