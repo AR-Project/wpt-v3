@@ -63,6 +63,7 @@ export const auth = betterAuth({
 
 			// FUTURE: Normal email sending logic for production goes here ...
 		},
+		autoSignIn: false,
 	},
 
 	logger: {
