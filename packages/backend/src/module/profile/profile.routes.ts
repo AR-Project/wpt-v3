@@ -1,9 +1,11 @@
 import { Hono } from "hono";
-import z from "zod";
 
 import { authProtectedMiddleware } from "@/middleware/auth.middleware";
 import { zValidator } from "@hono/zod-validator";
 import { auth, type ProtectedType } from "@lib/auth";
+
+import * as profileSchema from "./profile.schema";
+import { HTTPException } from "hono/http-exception";
 
 export const profileRoute = new Hono<{ Variables: ProtectedType }>({
 	strict: false,
@@ -14,27 +16,14 @@ export const profileRoute = new Hono<{ Variables: ProtectedType }>({
 		return c.json({ message: `Hello ${user.name}` });
 	})
 	.post(
-		"/user/:parentId/children",
-		zValidator(
-			"param",
-			z.object({
-				parentId: z.string(),
-			}),
-		),
-		zValidator(
-			"json",
-			z.object({
-				email: z.email(),
-				password: z.string().min(10),
-				name: z.string(),
-			}),
-		),
+		"/children",
+		zValidator("json", profileSchema.createChildren),
 		async (c) => {
-			const { parentId } = c.req.valid("param");
 			const { email, name, password } = c.req.valid("json");
 			const user = c.get("user");
 
-			if (parentId !== user.id) return c.body(null, 403);
+			// Only admin can create user
+			if (user.parentId !== user.id) throw new HTTPException(403);
 
 			const payload = {
 				email,
@@ -47,7 +36,7 @@ export const profileRoute = new Hono<{ Variables: ProtectedType }>({
 				},
 			};
 
-			const childUser = await auth.api.createUser({
+			const { user: childUser } = await auth.api.createUser({
 				body: payload,
 			});
 
@@ -59,9 +48,7 @@ export const profileRoute = new Hono<{ Variables: ProtectedType }>({
 
 /**
  * TODO - Endpoint for:
- * - update self information (name)
- *
- * - update child user password
+ * - update child user password - Implementation done, TODO TEST
  * - update child user information (name, email, image)
  * - get child users sessions (sessions state)
  * - ban
