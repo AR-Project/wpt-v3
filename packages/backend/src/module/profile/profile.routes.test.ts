@@ -12,6 +12,7 @@ import {
 	signUpSignInHelper,
 } from "../auth/auth.routes.test.helper";
 import * as profileTestHelper from "./profile.route.test.helper";
+import type { SetPasswordPayload } from "./profile.schema";
 
 type CreateChildUserRes = {
 	message: string;
@@ -181,6 +182,48 @@ describe("profile route", () => {
 			expect(sessionsPreAction.length).toBeGreaterThan(0);
 			expect(sessionsPostAction.length).toBe(0);
 			expect(res.status).toBe(204);
+		});
+	});
+
+	describe("PATCH child set-password", () => {
+		test("should success", async () => {
+			// Prepare
+			const childUserPayload = {
+				email: "child-user-set-password@test.com",
+				name: "child-set-password",
+				password: "!password123",
+			};
+
+			const childUser = await profileTestHelper.createChildUser(
+				childUserPayload,
+				currentUserCookie,
+				app,
+			);
+
+			const payload: SetPasswordPayload = {
+				newPassword: "itsNewPassword999",
+			};
+
+			const res = await app.request(
+				`/api/profile/children/${childUser.user.id}/set-password`,
+				{
+					headers: {
+						"Content-Type": "application/json",
+						Cookie: currentUserCookie,
+					},
+					body: JSON.stringify(payload),
+					method: "PATCH",
+				},
+			);
+
+			const data = await signInHelper(
+				{ email: childUserPayload.email, password: payload.newPassword },
+				app,
+			);
+
+			await childUser.cleanUser();
+			expect(res.status).toBe(200);
+			expect(data.cookie).toBeDefined();
 		});
 	});
 });

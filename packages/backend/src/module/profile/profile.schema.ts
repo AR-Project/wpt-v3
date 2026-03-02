@@ -13,3 +13,5 @@ export const createChildren = z.object({
 export const updateChildrenPassword = z.object({
 	newPassword: z.string().min(8),
 });
+
+export type SetPasswordPayload = z.infer<typeof updateChildrenPassword>;

@@ -66,13 +66,34 @@ export const profileRoute = new Hono<{ Variables: ProtectedType }>({
 			headers: c.req.raw.headers,
 		});
 		return c.body(null, 204);
-	});
+	})
+	.patch(
+		"/children/:childId/set-password",
+		zValidator("param", profileSchema.patchChildrenPathParam),
+		zValidator("json", profileSchema.updateChildrenPassword),
+		async (c) => {
+			const { childId } = c.req.valid("param");
+			const { newPassword } = c.req.valid("json");
+			const user = c.get("user");
+
+			if (user.parentId !== user.id) throw new HTTPException(403);
+
+			await auth.api.setUserPassword({
+				body: {
+					newPassword,
+					userId: childId,
+				},
+				headers: c.req.raw.headers,
+			});
+
+			return c.json({ message: "success" });
+		},
+	);
 
 // TODO: Implement new endpoint
 
 /**
  * TODO - Endpoint for:
- * - update child user password - Implementation done, TODO TEST
  * - update child user information (name, email, image)
  * - get child users sessions (sessions state)
  * - ban
