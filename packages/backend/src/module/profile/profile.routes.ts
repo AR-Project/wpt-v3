@@ -88,19 +88,44 @@ export const profileRoute = new Hono<{ Variables: ProtectedType }>({
 
 			return c.json({ message: "success" });
 		},
+	)
+	.patch(
+		"/children/:childId",
+		zValidator("param", profileSchema.patchChildrenPathParam),
+		zValidator("json", profileSchema.updateChild),
+		async (c) => {
+			const { childId } = c.req.valid("param");
+			const payload = c.req.valid("json");
+			const user = c.get("user");
+
+			if (user.parentId !== user.id) throw new HTTPException(403);
+
+			const userOnDb = await db.query.user.findFirst({
+				where: (userRow, { eq }) => eq(userRow.id, childId),
+			});
+
+			if (!userOnDb)
+				throw new HTTPException(404, { message: "child user not found" });
+
+			await auth.api.adminUpdateUser({
+				body: {
+					userId: childId, // required
+					data: payload, // required
+				},
+
+				headers: c.req.raw.headers,
+			});
+
+			return c.json({ message: "success" });
+		},
 	);
 
 // TODO: Implement new endpoint
 
 /**
  * TODO - Endpoint for:
- * - update child user information (name, email, image)
+ * - get list of child user
  * - get child users sessions (sessions state)
  * - ban
  * - unban
- * -
- *
- * NO NEED TODO - prefer to use auth api:
- * - update self information - https://www.better-auth.com/docs/concepts/users-accounts#update-user-information
- * - update self password - https://www.better-auth.com/docs/concepts/users-accounts#change-password
  */

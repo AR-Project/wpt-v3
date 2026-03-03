@@ -23,5 +23,4 @@ export const purchaseOrderRoute = new Hono<{ Variables: ProtectedType }>({
 
 // TODO: Endpoint for update purchase items "sortOrder" (bulk update) - main entity is still purchase Order.
 
-// TODO: Endpoint for update purchaseOrder information (vendor, orderedAt, imageId) - but prevent total cost.
-// Total cost should be calculated, and become side effect when updating "purchase item"
+// TODO: Endpoint for update purchaseOrder information (vendor, orderedAt, imageId) - excluding total cost. (its should become side effect from editing purchase item)

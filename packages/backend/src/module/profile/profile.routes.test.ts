@@ -12,7 +12,7 @@ import {
 	signUpSignInHelper,
 } from "../auth/auth.routes.test.helper";
 import * as profileTestHelper from "./profile.route.test.helper";
-import type { SetPasswordPayload } from "./profile.schema";
+import type { SetPasswordPayload, UpdateChildPayload } from "./profile.schema";
 
 type CreateChildUserRes = {
 	message: string;
@@ -224,6 +224,48 @@ describe("profile route", () => {
 			await childUser.cleanUser();
 			expect(res.status).toBe(200);
 			expect(data.cookie).toBeDefined();
+		});
+	});
+	describe("PATCH child user", () => {
+		test("should success update information", async () => {
+			// Prepare
+			const childUserPayload = {
+				email: "child-user-profile@test.com",
+				name: "child-profile",
+				password: "!password123",
+			};
+
+			const childUser = await profileTestHelper.createChildUser(
+				childUserPayload,
+				currentUserCookie,
+				app,
+			);
+
+			const payload: UpdateChildPayload = {
+				name: "new-name-for-child-user",
+				image: "some-url",
+			};
+
+			const res = await app.request(
+				`/api/profile/children/${childUser.user.id}`,
+				{
+					headers: {
+						"Content-Type": "application/json",
+						Cookie: currentUserCookie,
+					},
+					body: JSON.stringify(payload),
+					method: "PATCH",
+				},
+			);
+
+			const childUserData = await authTableHelper.findById(childUser.user.id);
+
+			await childUser.cleanUser();
+			expect(res.status).toBe(200);
+
+			expect(childUserData.length).toBeGreaterThan(0);
+			expect(childUserData[0]?.name).toBe("new-name-for-child-user");
+			expect(childUserData[0]?.image).toBe("some-url");
 		});
 	});
 });
