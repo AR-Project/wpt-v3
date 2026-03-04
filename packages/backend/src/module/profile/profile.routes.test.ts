@@ -5,7 +5,7 @@ import { categoryTbHelper } from "@/db/_testHelper/categoryDbHelper";
 import { authTableHelper } from "@/db/_testHelper/authDbHelper";
 import * as sessionTbHlpr from "@/db/_testHelper/session.tableHelper";
 
-import type { AuthUser } from "@/lib/auth";
+import type { AuthUser, NonNullableUser } from "@/lib/auth";
 
 import {
 	signInHelper,
@@ -39,9 +39,10 @@ describe("profile route", () => {
 	afterAll(async () => {
 		await categoryTbHelper.clean({ userId: currentUserId });
 		await authTableHelper.clean({ userId: currentUserId });
+		await authTableHelper.cleanByParentId(currentUserId!);
 	});
 
-	describe("GET", () => {
+	describe("GET profile", () => {
 		test.serial("should 401 without cookie", async () => {
 			const profileRes = await app.request("/api/profile");
 			expect(profileRes.status).toBe(401);
@@ -58,6 +59,41 @@ describe("profile route", () => {
 			expect(profileRes.status).toBe(200);
 			expect(resJson.message).toBeDefined();
 			expect(resJson.message).toBe("Hello test-user-on-profile-route");
+		});
+	});
+	describe("GET child", () => {
+		test.serial("should return users children", async () => {
+			const [childUserOne, childUserTwo] = await Promise.all([
+				profileTestHelper.createChildUser(
+					{
+						email: "get-user-1@test.com",
+						name: "get-user-1",
+						password: "!password123",
+					},
+					currentUserCookie,
+					app,
+				),
+
+				profileTestHelper.createChildUser(
+					{
+						email: "get-user-2@test.com",
+						name: "get-user-2",
+						password: "!password123",
+					},
+					currentUserCookie,
+					app,
+				),
+			]);
+
+			const res = await app.request(`/api/profile/children`, {
+				headers: {
+					Cookie: currentUserCookie,
+				},
+				method: "get",
+			});
+			await Promise.all([childUserOne.cleanUser(), childUserTwo.cleanUser()]);
+			const json = (await res.json()) as NonNullableUser[];
+			expect(json.length).toBe(2);
 		});
 	});
 

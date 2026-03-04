@@ -1,11 +1,11 @@
 import { Hono } from "hono";
+import { HTTPException } from "hono/http-exception";
 
 import { authProtectedMiddleware } from "@/middleware/auth.middleware";
 import { zValidator } from "@hono/zod-validator";
 import { auth, type ProtectedType } from "@lib/auth";
 
 import * as profileSchema from "./profile.schema";
-import { HTTPException } from "hono/http-exception";
 import { db } from "@/db";
 
 export const profileRoute = new Hono<{ Variables: ProtectedType }>({
@@ -15,6 +15,23 @@ export const profileRoute = new Hono<{ Variables: ProtectedType }>({
 	.get("/", async (c) => {
 		const user = c.get("user");
 		return c.json({ message: `Hello ${user.name}` });
+	})
+	.get("/children", async (c) => {
+		const user = c.get("user");
+
+		if (user.id !== user.parentId)
+			throw new HTTPException(403, { message: "not an admin" });
+
+		const childUser = await db.query.user.findMany({
+			where: (childUser, { eq, and, ne }) =>
+				and(eq(childUser.parentId, user.id), ne(childUser.id, user.id)),
+
+			with: {
+				sessions: true,
+			},
+		});
+
+		return c.json(childUser);
 	})
 	.post(
 		"/children",
@@ -124,8 +141,6 @@ export const profileRoute = new Hono<{ Variables: ProtectedType }>({
 
 /**
  * TODO - Endpoint for:
- * - get list of child user
- * - get child users sessions (sessions state)
  * - ban
  * - unban
  */
