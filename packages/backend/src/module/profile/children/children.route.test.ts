@@ -76,6 +76,14 @@ describe("children route", () => {
 			const json = (await res.json()) as NonNullableUser[];
 			expect(json.length).toBe(2);
 		});
+
+		test.serial("should fail without cookie", async () => {
+			const res = await app.request(`/api/profile/children`, {
+				method: "get",
+			});
+
+			expect(res.status).toBe(401);
+		});
 	});
 
 	describe("POST", () => {
