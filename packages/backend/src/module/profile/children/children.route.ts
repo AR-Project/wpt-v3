@@ -1,11 +1,11 @@
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
-
 import { zValidator } from "@hono/zod-validator";
+
 import { auth, type ProtectedType } from "@lib/auth";
+import { db } from "@/db";
 
 import * as childrenSchema from "./children.schema";
-import { db } from "@/db";
 
 export const profileChildrenRoute = new Hono<{ Variables: ProtectedType }>({
 	strict: false,
@@ -51,40 +51,37 @@ export const profileChildrenRoute = new Hono<{ Variables: ProtectedType }>({
 
 		return c.json({ message: "user created", user: childUser }, 201);
 	})
-	.delete("/:childId/sessions", async (c) => {
-		const { childId } = c.req.param();
+
+	// Middleware
+	.use("/:childId/*", async (c, next) => {
 		const user = c.get("user");
+		const childId = c.req.param("childId");
+		if (user.parentId !== user.id) throw new HTTPException(403);
 
-		if (user.parentId !== user.id)
-			throw new HTTPException(403, { message: "role not allowed" });
-
-		const userOnDb = await db.query.user.findFirst({
+		const childUser = await db.query.user.findFirst({
 			where: (userRow, { eq }) => eq(userRow.id, childId),
 		});
-
-		if (!userOnDb)
+		if (!childUser)
 			throw new HTTPException(404, { message: "child user not found" });
+		if (childUser.parentId !== user.id) throw new HTTPException(403);
+		await next();
+	})
 
+	// Children subpath
+	.delete("/:childId/sessions", async (c) => {
+		const { childId } = c.req.param();
 		await auth.api.revokeUserSessions({
-			body: {
-				userId: childId, // required
-			},
-			// This endpoint requires session cookies.
+			body: { userId: childId },
 			headers: c.req.raw.headers,
 		});
 		return c.body(null, 204);
 	})
 	.patch(
 		"/:childId/set-password",
-		zValidator("param", childrenSchema.patchChildrenPathParam),
 		zValidator("json", childrenSchema.updateChildrenPassword),
 		async (c) => {
-			const { childId } = c.req.valid("param");
+			const childId = c.req.param("childId");
 			const { newPassword } = c.req.valid("json");
-			const user = c.get("user");
-
-			if (user.parentId !== user.id) throw new HTTPException(403);
-
 			await auth.api.setUserPassword({
 				body: {
 					newPassword,
@@ -92,45 +89,41 @@ export const profileChildrenRoute = new Hono<{ Variables: ProtectedType }>({
 				},
 				headers: c.req.raw.headers,
 			});
-
 			return c.json({ message: "success" });
 		},
 	)
 	.patch(
 		"/:childId",
-		zValidator("param", childrenSchema.patchChildrenPathParam),
 		zValidator("json", childrenSchema.updateChild),
 		async (c) => {
-			const { childId } = c.req.valid("param");
+			const childId = c.req.param("childId");
 			const payload = c.req.valid("json");
-			const user = c.get("user");
-
-			if (user.parentId !== user.id) throw new HTTPException(403);
-
-			const userOnDb = await db.query.user.findFirst({
-				where: (userRow, { eq }) => eq(userRow.id, childId),
-			});
-
-			if (!userOnDb)
-				throw new HTTPException(404, { message: "child user not found" });
-
 			await auth.api.adminUpdateUser({
 				body: {
 					userId: childId, // required
 					data: payload, // required
 				},
-
 				headers: c.req.raw.headers,
 			});
 
 			return c.json({ message: "success" });
 		},
-	);
+	)
+	.post("/:childId/ban", async (c) => {
+		const childId = c.req.param("childId");
+		await auth.api.banUser({
+			body: { userId: childId },
+			headers: c.req.raw.headers,
+		});
 
-// TODO: Implement new endpoint
+		return c.json({ message: "success" });
+	})
+	.post("/:childId/unban", async (c) => {
+		const childId = c.req.param("childId");
+		await auth.api.unbanUser({
+			body: { userId: childId },
+			headers: c.req.raw.headers,
+		});
 
-/**
- * TODO - Endpoint for:
- * - ban
- * - unban
- */
+		return c.json({ message: "success" });
+	});

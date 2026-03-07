@@ -211,7 +211,7 @@ describe("children route", () => {
 	});
 
 	describe("PATCH set-password", () => {
-		test("should success", async () => {
+		test.serial("should success", async () => {
 			// Prepare
 			const childUserPayload = {
 				email: "child-user-set-password@test.com",
@@ -251,8 +251,9 @@ describe("children route", () => {
 			expect(data.cookie).toBeDefined();
 		});
 	});
+
 	describe("PATCH", () => {
-		test("should success update information", async () => {
+		test.serial("should success update information", async () => {
 			// Prepare
 			const childUserPayload = {
 				email: "child-user-profile@test.com",
@@ -291,6 +292,76 @@ describe("children route", () => {
 			expect(childUserData.length).toBeGreaterThan(0);
 			expect(childUserData[0]?.name).toBe("new-name-for-child-user");
 			expect(childUserData[0]?.image).toBe("some-url");
+		});
+	});
+
+	describe("POST ban", () => {
+		test.serial("should ban child user", async () => {
+			// Prepare
+			const childUserPayload = {
+				email: "child-user-ban@test.com",
+				name: "child-profile",
+				password: "!password123",
+			};
+
+			const childUser = await profileTestHelper.createChildUser(
+				childUserPayload,
+				currentUserCookie,
+				app,
+			);
+
+			const res = await app.request(
+				`/api/profile/children/${childUser.user.id}/ban`,
+				{
+					headers: {
+						"Content-Type": "application/json",
+						Cookie: currentUserCookie,
+					},
+					method: "POST",
+				},
+			);
+
+			const childUserData = await authTableHelper.findById(childUser.user.id);
+
+			await childUser.cleanUser();
+			expect(res.status).toBe(200);
+
+			expect(childUserData.length).toBeGreaterThan(0);
+			expect(childUserData[0]?.banned).toBe(true);
+		});
+	});
+	describe("POST unban", () => {
+		test.serial("should unban child user", async () => {
+			// Prepare
+			const childUserPayload = {
+				email: "child-user-unban@test.com",
+				name: "child-profile",
+				password: "!password123",
+			};
+
+			const childUser = await profileTestHelper.createChildUser(
+				childUserPayload,
+				currentUserCookie,
+				app,
+			);
+
+			const res = await app.request(
+				`/api/profile/children/${childUser.user.id}/unban`,
+				{
+					headers: {
+						"Content-Type": "application/json",
+						Cookie: currentUserCookie,
+					},
+					method: "POST",
+				},
+			);
+
+			const childUserData = await authTableHelper.findById(childUser.user.id);
+			await childUser.cleanUser();
+
+			expect(res.status).toBe(200);
+			expect(childUserData.length).toBeGreaterThan(0);
+			expect(childUserData[0]?.banned).toBe(false);
 		});
 	});
 });
