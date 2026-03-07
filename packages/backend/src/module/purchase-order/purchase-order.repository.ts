@@ -1,4 +1,5 @@
 import { HTTPException } from "hono/http-exception";
+import { eq } from "drizzle-orm";
 
 import type { NonNullableUser } from "@/lib/auth";
 import { generateId } from "@/lib/idGenerator";
@@ -10,10 +11,10 @@ import {
 	type PurchaseOrderDbInsert,
 } from "@/db/schema";
 
-import type { CreatePurchaseOrderPayload } from "./purchase-order.schema";
+import type * as poSchema from "./purchase-order.schema";
 
 export async function create(
-	payload: CreatePurchaseOrderPayload,
+	payload: poSchema.CreatePurchaseOrderPayload,
 	user: NonNullableUser,
 ) {
 	return await db.transaction(async (tx) => {
@@ -73,5 +74,51 @@ export async function create(
 
 		await db.insert(purchaseItem).values(piPayload);
 		return purchaseOrderId;
+	});
+}
+
+export async function update(
+	payload: poSchema.PatchPayload,
+	poIdToUpdate: string,
+	user: NonNullableUser,
+) {
+	await db.transaction(async (tx) => {
+		const { vendorId, imageId } = payload;
+		const po = await tx.query.purchaseOrder.findFirst({
+			where: (po, { eq }) => eq(po.id, poIdToUpdate),
+		});
+
+		if (!po)
+			throw new HTTPException(404, { message: "Purchase Order not found" });
+
+		if (po.userIdParent !== user.parentId)
+			throw new HTTPException(403, {
+				message: `Not Authorized to change ${poIdToUpdate}`,
+			});
+
+		if (vendorId) {
+			const vendor = await tx.query.vendor.findFirst({
+				where: (v, { eq }) => eq(v.id, vendorId),
+			});
+			if (!vendor)
+				throw new HTTPException(404, {
+					message: "Vendor not found",
+				});
+		}
+
+		if (imageId) {
+			const image = await tx.query.image.findFirst({
+				where: (i, { eq }) => eq(i.id, imageId),
+			});
+			if (!image)
+				throw new HTTPException(404, {
+					message: "Image not found",
+				});
+		}
+
+		await db
+			.update(purchaseOrder)
+			.set({ ...payload })
+			.where(eq(purchaseOrder.id, poIdToUpdate));
 	});
 }

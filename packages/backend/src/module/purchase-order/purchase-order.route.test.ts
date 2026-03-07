@@ -5,7 +5,10 @@ import { authTableHelper } from "@/db/_testHelper/authDbHelper";
 import { signUpSignInHelper } from "../auth/auth.routes.test.helper";
 import { productTbHelper } from "@/db/_testHelper/product.tableHelper";
 import { categoryTbHelper } from "@/db/_testHelper/categoryDbHelper";
-import type { CreatePurchaseOrderPayload } from "./purchase-order.schema";
+import type {
+	CreatePurchaseOrderPayload,
+	PatchPayload,
+} from "./purchase-order.schema";
 import * as purchaseItemTbHelper from "@db/_testHelper/purchaseItem.tableHelper";
 import * as purchaseOrderTbHelper from "@db/_testHelper/purchaseOrder.tableHelper";
 import * as vendorTbHelper from "@db/_testHelper/vendor.tableHelper";
@@ -172,6 +175,86 @@ describe("purchase-order route", () => {
 			// assert
 			expect(res.status).toBe(400);
 			expect(json.message).toBe("(some) product(s) ID invalid");
+		});
+	});
+
+	describe("purchase-order PATCH ", () => {
+		test.serial("should success updating information", async () => {
+			// prepare
+			const payload: CreatePurchaseOrderPayload = {
+				vendorId: "vendor_po_test",
+				totalCost: 50000,
+				orderedAt: new Date(2026, 0, 1, 10, 10),
+				purchaseItems: [
+					{
+						productId: "po_product_1",
+						quantity: 4,
+						costPrice: 5000,
+					},
+					{
+						productId: "po_product_2",
+						quantity: 2,
+						costPrice: 15000,
+					},
+				],
+			};
+
+			await vendorTbHelper.add({
+				id: "vendor_po_patch",
+				name: "vendor po patch",
+				userIdCreator: currentUserId!,
+				userIdParent: currentUserId!,
+			});
+
+			const res = await app.request("/api/purchase-order", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					Cookie: cookie,
+				},
+				body: JSON.stringify(payload),
+			});
+			const createdResJson = (await res.json()) as {
+				message: string;
+				data: string;
+			};
+			const createdPO = await purchaseOrderTbHelper.findById(
+				createdResJson.data,
+				{ withItems: true },
+			);
+
+			const patchPayload: PatchPayload = {
+				vendorId: "vendor_po_patch",
+			};
+
+			const patchRes = await app.request(
+				`/api/purchase-order/${createdResJson.data}`,
+				{
+					method: "PATCH",
+					headers: {
+						"Content-Type": "application/json",
+						Cookie: cookie,
+					},
+					body: JSON.stringify(patchPayload),
+				},
+			);
+
+			const patchedPo = await purchaseOrderTbHelper.findById(
+				createdResJson.data,
+				{ withItems: true },
+			);
+
+			// scoped clean up
+			await purchaseOrderTbHelper.clean({
+				purchaseOrderId: createdResJson.data,
+			});
+			await vendorTbHelper.clean({ vendorId: "vendor_po_patch" });
+
+			// assert
+			expect(res.status).toBe(201);
+			expect(patchRes.status).toBe(200);
+			expect(createdPO[0]?.vendorId).toBe("vendor_po_test");
+			expect(patchedPo[0]?.vendorId).toBe("vendor_po_patch");
 		});
 	});
 });

@@ -14,3 +14,15 @@ export const create = z.object({
 	),
 });
 export type CreatePurchaseOrderPayload = z.infer<typeof create>;
+
+export const patch = z
+	.object({
+		vendorId: z.string().optional(),
+		orderedAt: z.coerce.date().optional(),
+		imageId: z.string().optional(),
+	})
+	.refine((data) => Object.keys({ ...data }).length > 0, {
+		message: "At least one property required",
+	});
+
+export type PatchPayload = z.infer<typeof patch>;
