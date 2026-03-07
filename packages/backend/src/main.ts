@@ -38,6 +38,10 @@ export const app = new Hono()
 
 	// Other
 	.get("/hello", async (c) => c.json({ message: "hello from api" }))
+	.notFound((c) => {
+		const message = `The endpoint ${c.req.path} does not exist.`;
+		return c.json({ message }, 404);
+	})
 	.onError((error, c) => {
 		if (error instanceof HTTPException)
 			return c.json({ message: error.message }, error.status);
