@@ -10,7 +10,6 @@ import { db } from "@/db";
 export const profileChildrenRoute = new Hono<{ Variables: ProtectedType }>({
 	strict: false,
 })
-	// .use(authProtectedMiddleware)
 	.get("/", async (c) => {
 		const user = c.get("user");
 
