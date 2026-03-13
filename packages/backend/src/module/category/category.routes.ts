@@ -1,6 +1,5 @@
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
-// import { zValidator } from "@hono/zod-validator";
 import z from "zod";
 import { eq } from "drizzle-orm";
 
@@ -12,8 +11,12 @@ import {
 	type CreateCategoryDbPayload,
 } from "@/db/schema/category.schema";
 import { generateId } from "@/lib/idGenerator";
-import { createCategorySchema, updateCategorySchema } from "@/shared";
+import {
+	createCategorySchema,
+	updateCategorySchema,
+} from "@module/category/category.schema";
 import { zValidator } from "@/lib/validator-wrapper";
+import { product } from "@/db/schema";
 
 export const categoryRoute = new Hono<{ Variables: ProtectedType }>({
 	strict: false,
@@ -33,22 +36,41 @@ export const categoryRoute = new Hono<{ Variables: ProtectedType }>({
 		return c.json(categories);
 	})
 	.post("/", zValidator("json", createCategorySchema), async (c) => {
-		const payload = c.req.valid("json");
+		const { name, productId } = c.req.valid("json");
 		const user = c.get("user");
 
 		const dbPayload: CreateCategoryDbPayload = {
 			id: `cat_${generateId(10)}`,
-			name: payload.name,
+			name: name,
 			userIdParent: user.parentId,
 			userIdCreator: user.id,
 		};
 
-		// TODO: Implement optional create category and update productId on it.
+		const createdCategory = await db.transaction(async (tx) => {
+			const [cat] = await tx
+				.insert(category)
+				.values(dbPayload)
+				.returning({ id: category.id, name: category.name });
 
-		const [createdCategory] = await db
-			.insert(category)
-			.values(dbPayload)
-			.returning({ id: category.id, name: category.name });
+			if (!cat)
+				throw new HTTPException(500, { message: "Fail to create Category" });
+
+			if (!productId) return cat; // return early
+
+			const currProduct = await tx.query.product.findFirst({
+				where: (pd, { eq }) => eq(pd.id, productId),
+			});
+
+			if (!currProduct)
+				throw new HTTPException(404, { message: "Product not found" });
+
+			await tx
+				.update(product)
+				.set({ categoryId: cat.id })
+				.where(eq(product.id, productId));
+
+			return cat;
+		});
 
 		return c.json(createdCategory, 201);
 	})
