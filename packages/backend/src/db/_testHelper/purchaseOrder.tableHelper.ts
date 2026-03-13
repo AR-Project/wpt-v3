@@ -39,7 +39,11 @@ export async function findById(purchaseOrderId: string, option?: FindOptions) {
 	return await db.query.purchaseOrder.findMany({
 		where: (purchaseOrder, { eq }) => eq(purchaseOrder.id, purchaseOrderId),
 		with: {
-			purchaseItem: option?.withItems,
+			purchaseItem: option?.withItems
+				? {
+						orderBy: (pi, { asc }) => asc(pi.sortOrder),
+					}
+				: undefined,
 		},
 	});
 }
