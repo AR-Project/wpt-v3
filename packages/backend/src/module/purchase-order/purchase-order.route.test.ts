@@ -8,6 +8,7 @@ import { categoryTbHelper } from "@/db/_testHelper/categoryDbHelper";
 import type {
 	CreatePurchaseOrderPayload,
 	PatchPayload,
+	PatchSortOrderPayload,
 } from "./purchase-order.schema";
 import * as purchaseItemTbHelper from "@db/_testHelper/purchaseItem.tableHelper";
 import * as purchaseOrderTbHelper from "@db/_testHelper/purchaseOrder.tableHelper";
@@ -61,6 +62,29 @@ describe("purchase-order route", () => {
 		await categoryTbHelper.clean({ userId: currentUserId });
 		await authTableHelper.clean({ userId: currentUserId });
 	});
+
+	const mockPurchaseOrder: CreatePurchaseOrderPayload = {
+		vendorId: "vendor_po_test",
+		totalCost: 70000,
+		orderedAt: new Date(2026, 0, 1, 10, 10),
+		purchaseItems: [
+			{
+				productId: "po_product_1",
+				quantity: 4,
+				costPrice: 5000,
+			},
+			{
+				productId: "po_product_2",
+				quantity: 2,
+				costPrice: 15000,
+			},
+			{
+				productId: "po_product_3",
+				quantity: 2,
+				costPrice: 10000,
+			},
+		],
+	};
 
 	describe("POST endpoint", () => {
 		test.serial("should success", async () => {
@@ -180,25 +204,7 @@ describe("purchase-order route", () => {
 
 	describe("purchase-order PATCH ", () => {
 		test.serial("should success updating information", async () => {
-			// prepare
-			const payload: CreatePurchaseOrderPayload = {
-				vendorId: "vendor_po_test",
-				totalCost: 50000,
-				orderedAt: new Date(2026, 0, 1, 10, 10),
-				purchaseItems: [
-					{
-						productId: "po_product_1",
-						quantity: 4,
-						costPrice: 5000,
-					},
-					{
-						productId: "po_product_2",
-						quantity: 2,
-						costPrice: 15000,
-					},
-				],
-			};
-
+			// Mock Second vendor
 			await vendorTbHelper.add({
 				id: "vendor_po_patch",
 				name: "vendor po patch",
@@ -212,7 +218,7 @@ describe("purchase-order route", () => {
 					"Content-Type": "application/json",
 					Cookie: cookie,
 				},
-				body: JSON.stringify(payload),
+				body: JSON.stringify(mockPurchaseOrder),
 			});
 			const createdResJson = (await res.json()) as {
 				message: string;
@@ -257,4 +263,72 @@ describe("purchase-order route", () => {
 			expect(patchedPo[0]?.vendorId).toBe("vendor_po_patch");
 		});
 	});
+
+	describe("purchase-order PATCH sort-order", () => {
+		test.serial("should success update sort-order", async () => {
+			// Write PO to database
+			const createPORes = await app.request("/api/purchase-order", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					Cookie: cookie,
+				},
+				body: JSON.stringify(mockPurchaseOrder),
+			});
+			const createdResJson = (await createPORes.json()) as {
+				message: string;
+				data: string;
+			};
+			const [createdPO] = await purchaseOrderTbHelper.findById(
+				createdResJson.data,
+				{ withItems: true },
+			);
+
+			if (!createdPO) throw new Error("sort-order test po creation fail");
+			if (createdPO.purchaseItem.length < 3) throw new Error("wrong length");
+
+			const oldIdOrder = createdPO.purchaseItem.map(
+				(pi) => pi.id,
+			) as StringTuple;
+
+			const [pi_1, pi_b, pi_c] = oldIdOrder;
+
+			// MOCK new sort-order
+			const sortOrderPayload: PatchSortOrderPayload = {
+				newIdOrder: [pi_c, pi_1, pi_b],
+			};
+
+			// ACTION
+			const res = await app.request(
+				`/api/purchase-order/${createdResJson.data}/sort-order`,
+				{
+					method: "PATCH",
+					headers: {
+						"Content-Type": "application/json",
+						Cookie: cookie,
+					},
+					body: JSON.stringify(sortOrderPayload),
+				},
+			);
+
+			const [patchedPo] = await purchaseOrderTbHelper.findById(
+				createdResJson.data,
+				{ withItems: true },
+			);
+
+			// scoped clean up
+			await purchaseOrderTbHelper.clean({
+				purchaseOrderId: createdResJson.data,
+			});
+
+			// assert
+			expect(createPORes.status).toBe(201);
+			expect(res.status).toBe(200);
+			expect(patchedPo?.purchaseItem[0]?.productId).toBe("po_product_3");
+			expect(patchedPo?.purchaseItem[1]?.productId).toBe("po_product_1");
+			expect(patchedPo?.purchaseItem[2]?.productId).toBe("po_product_2");
+		});
+	});
 });
+
+type StringTuple = [string, string, string];

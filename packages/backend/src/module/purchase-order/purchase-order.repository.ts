@@ -1,9 +1,9 @@
 import { HTTPException } from "hono/http-exception";
-import { eq } from "drizzle-orm";
+import { eq, inArray, sql, type SQL } from "drizzle-orm";
 
 import type { NonNullableUser } from "@/lib/auth";
 import { generateId } from "@/lib/idGenerator";
-import { db } from "@/db";
+import { db, type Tx } from "@/db";
 import {
 	purchaseItem,
 	purchaseOrder,
@@ -12,6 +12,18 @@ import {
 } from "@/db/schema";
 
 import type * as poSchema from "./purchase-order.schema";
+import { haveMismatch } from "@/lib/utils/array-validator";
+
+async function txFindFirstById(poId: string, tx: Tx) {
+	return await tx.query.purchaseOrder.findFirst({
+		where: (po, { eq }) => eq(po.id, poId),
+		with: {
+			purchaseItem: {
+				orderBy: (pi, { asc }) => asc(pi.sortOrder),
+			},
+		},
+	});
+}
 
 export async function create(
 	payload: poSchema.CreatePurchaseOrderPayload,
@@ -84,9 +96,7 @@ export async function update(
 ) {
 	await db.transaction(async (tx) => {
 		const { vendorId, imageId } = payload;
-		const po = await tx.query.purchaseOrder.findFirst({
-			where: (po, { eq }) => eq(po.id, poIdToUpdate),
-		});
+		const po = await txFindFirstById(poIdToUpdate, tx);
 
 		if (!po)
 			throw new HTTPException(404, { message: "Purchase Order not found" });
@@ -120,5 +130,38 @@ export async function update(
 			.update(purchaseOrder)
 			.set({ ...payload })
 			.where(eq(purchaseOrder.id, poIdToUpdate));
+	});
+}
+
+export async function updateSortOrder(
+	poIdToUpdate: string,
+	payload: { newIdOrder: string[] },
+) {
+	await db.transaction(async (tx) => {
+		const currPo = await txFindFirstById(poIdToUpdate, tx);
+
+		if (!currPo)
+			throw new HTTPException(404, { message: "Purchase Order Not Found" });
+
+		const oldIdOrder = currPo.purchaseItem.map((pi) => pi.id);
+
+		if (haveMismatch(payload.newIdOrder, oldIdOrder))
+			throw new HTTPException(400, { message: "list not match" });
+
+		const sqlChunks: SQL[] = []; // Empty sqlChunks array
+
+		// generating
+		sqlChunks.push(sql`(case`);
+		payload.newIdOrder.forEach((id, index) => {
+			sqlChunks.push(sql`when ${purchaseItem.id} = ${id} then ${index}`);
+		});
+		sqlChunks.push(sql`end)`);
+
+		const finalSql: SQL = sql.join(sqlChunks, sql.raw(" "));
+
+		await tx
+			.update(purchaseItem)
+			.set({ sortOrder: finalSql })
+			.where(inArray(purchaseItem.id, payload.newIdOrder));
 	});
 }

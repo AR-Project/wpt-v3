@@ -26,3 +26,9 @@ export const patch = z
 	});
 
 export type PatchPayload = z.infer<typeof patch>;
+
+export const patchSortOrder = z.object({
+	newIdOrder: z.array(z.string()),
+});
+
+export type PatchSortOrderPayload = z.infer<typeof patchSortOrder>;

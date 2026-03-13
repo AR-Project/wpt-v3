@@ -33,7 +33,15 @@ export const purchaseOrderRoute = new Hono<{ Variables: ProtectedType }>({
 			return c.json({ message: "success" });
 		},
 	)
-	.post("/:purchaseOrderId/sort-order", async (c) => {
-		// TODO: Endpoint for update purchase items "sortOrder" (bulk update) - main entity is still purchase Order.
-		return c.json({ message: "TODO" });
-	});
+	.patch(
+		"/:purchaseOrderId/sort-order",
+		zValidator("json", purchaseOrderSchema.patchSortOrder),
+		async (c) => {
+			const payload = c.req.valid("json");
+			const poIdToUpdate = c.req.param("purchaseOrderId");
+
+			await purchaseOrderRepo.updateSortOrder(poIdToUpdate, payload);
+
+			return c.json({ message: "Success" });
+		},
+	);
