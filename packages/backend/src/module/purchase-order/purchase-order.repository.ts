@@ -79,7 +79,7 @@ export async function create(
 				userIdParent: user.parentId,
 				userIdCreator: user.parentId,
 				purchaseOrderId: purchaseOrderId,
-				vendorId: payload.vendorId,
+				vendorId: payload.vendorId, // Tobe Delete! Redundant
 				sortOrder: index,
 			}),
 		);

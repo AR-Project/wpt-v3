@@ -31,6 +31,8 @@ export const purchaseItem = sqliteTable(
 			.references(() => purchaseOrder.id, {
 				onDelete: "cascade",
 			}),
+
+		// TO DELETE: duplicate information - Purchase Order already have vendor ID
 		vendorId: t
 			.text("vendor_id")
 			.notNull()
@@ -41,10 +43,12 @@ export const purchaseItem = sqliteTable(
 			.text("product_id")
 			.notNull()
 			.references(() => product.id),
-		costPrice: t.integer("cost_price").notNull(), // cost paid disregarding qty
+
+		// This is total cost. Value for cost Per Unit / per item calculated on runtime
+		costPrice: t.integer("cost_price").notNull(),
+
+		// Respect product.displayDivider
 		quantity: t.integer("quantity").notNull(),
-		// Unlike v2, purchaseItem.totalPrice always calculated on server
-		// on client, qty always divided by product.displayDivider
 		sortOrder: t.integer("sort_order"),
 		createdAt: t
 			.integer("created_at", { mode: "timestamp_ms" })

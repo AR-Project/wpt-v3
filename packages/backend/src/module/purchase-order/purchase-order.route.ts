@@ -4,9 +4,10 @@ import { zValidator } from "@/lib/validator-wrapper";
 import { authProtectedMiddleware } from "@/middleware/auth.middleware";
 
 import type { ProtectedType } from "@lib/auth";
-import * as purchaseOrderSchema from "@module/purchase-order/purchase-order.schema";
 
-import * as purchaseOrderRepo from "./purchase-order.repository";
+import * as purchaseOrderSchema from "@module/purchase-order/purchase-order.schema";
+import * as purchaseOrderRepo from "@module/purchase-order/purchase-order.repository";
+import { purchaseItemRoute } from "@module/purchase-order//purchase-item/purchase-item.route";
 
 export const purchaseOrderRoute = new Hono<{ Variables: ProtectedType }>({
 	strict: false,
@@ -20,8 +21,13 @@ export const purchaseOrderRoute = new Hono<{ Variables: ProtectedType }>({
 
 		return c.json({ message: `Success`, data: purchaseOrderId }, 201);
 	})
+
+	// Register subpath
+	.route("/:purchaseOrderId/pi", purchaseItemRoute)
+
+	// Endpoints
 	.patch(
-		":purchaseOrderId",
+		"/:purchaseOrderId",
 		zValidator("json", purchaseOrderSchema.patch),
 		async (c) => {
 			const poIdToUpdate = c.req.param("purchaseOrderId");
