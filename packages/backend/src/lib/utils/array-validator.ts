@@ -1,11 +1,24 @@
-export function arraysHaveEqualElements(array1: string[], array2: string[]) {
-	if (array1.length !== array2.length) return false;
-	const set1 = new Set(array1);
-	const set2 = new Set(array2);
-	if (set1.size !== set2.size) return false;
+export function haveMismatch(arr1: string[], arr2: string[]): boolean {
+	// 1. Instant exit if lengths differ
+	if (arr1.length !== arr2.length) return true;
 
-	for (const element of array1) {
-		if (!set2.has(element)) return false;
+	const counts = new Map<string, number>();
+
+	// 2. Count occurrences in the first array
+	for (const item of arr1) {
+		counts.set(item, (counts.get(item) || 0) + 1);
 	}
-	return true;
+
+	// 3. Subtract occurrences using the second array
+	for (const item of arr2) {
+		const count = counts.get(item);
+
+		// If item doesn't exist or count is already 0, they aren't equal
+		if (!count) return true;
+
+		counts.set(item, count - 1);
+	}
+
+	// If we made it here, they are identical
+	return false;
 }

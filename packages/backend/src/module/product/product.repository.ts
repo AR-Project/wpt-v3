@@ -2,7 +2,6 @@ import { eq, inArray, sql, type SQL } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 
 import type { NonNullableUser } from "@/lib/auth";
-import { arraysHaveEqualElements } from "@/lib/utils/array-validator";
 
 import { db } from "@/db";
 import { product, type ProductDbInsert } from "@/db/schema/product.schema";
@@ -12,6 +11,7 @@ import type {
 	UpdateItemPayload,
 } from "./product.schema";
 import { generateId } from "@/lib/idGenerator";
+import { haveMismatch } from "@/lib/utils/array-validator";
 
 export async function getAllByUser(user: NonNullableUser) {
 	return await db.query.product.findMany({
@@ -136,7 +136,7 @@ export async function updateSortOrderMultiple(
 
 		const itemIdsOldOrder = categoryWithItems.items.map((item) => item.id);
 
-		if (arraysHaveEqualElements(itemIdsOldOrder, itemIdsNewOrder) === false)
+		if (haveMismatch(itemIdsOldOrder, itemIdsNewOrder))
 			throw new HTTPException(400, {
 				message: "item id(s) different from category",
 			});
