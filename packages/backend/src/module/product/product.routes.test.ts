@@ -84,6 +84,34 @@ describe("product route", () => {
 
 			// cleanup
 		});
+
+		test.serial(
+			"should return product with latest price (if any)",
+			async () => {
+				const res = await app.request("/api/product?include=last-price", {
+					method: "GET",
+					headers: {
+						Cookie: cookie,
+					},
+				});
+
+				const resJson = (await res.json()) as {
+					id: string;
+					name: string;
+					sortOrder: number;
+					latestPrice: number;
+				}[];
+				expect(resJson.length).toBe(1);
+
+				const [item] = resJson;
+
+				expect(item?.name).toBe("test-item-GET");
+				expect(item?.id).toBe(itemIdToGet);
+				expect(item?.latestPrice).toBeDefined();
+
+				// cleanup
+			},
+		);
 	});
 
 	describe("POST endpoint", () => {

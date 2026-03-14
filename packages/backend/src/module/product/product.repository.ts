@@ -13,14 +13,38 @@ import type {
 import { generateId } from "@/lib/idGenerator";
 import { haveMismatch } from "@/lib/utils/array-validator";
 
-export async function getAllByUser(user: NonNullableUser) {
-	return await db.query.product.findMany({
-		where: (product, { eq }) => eq(product.userIdParent, user.parentId),
+type GetPayload = {
+	userIdParent: string;
+};
+
+export async function getAllByUser({ userIdParent }: GetPayload) {
+	const product = await db.query.product.findMany({
+		where: (product, { eq }) => eq(product.userIdParent, userIdParent),
 		columns: {
 			id: true,
 			name: true,
 			sortOrder: true,
 		},
+		with: {
+			purchaseItem: {
+				columns: {
+					costPrice: true,
+					quantity: true,
+				},
+				orderBy: (pi, { desc }) => desc(pi.createdAt),
+				limit: 1,
+			},
+		},
+	});
+
+	// unit price / harga satuan  always calculated on the runtime. DB does not store that
+	return product.map(({ purchaseItem, ...rest }) => {
+		return {
+			...rest,
+			latestPrice: purchaseItem[0]
+				? purchaseItem[0].costPrice / purchaseItem[0].quantity
+				: 0,
+		};
 	});
 }
 

@@ -13,8 +13,9 @@ export const productRoute = new Hono<{ Variables: ProtectedType }>({
 	.use(authProtectedMiddleware)
 	.get("/", async (c) => {
 		const user = c.get("user");
-
-		const items = await productRepo.getAllByUser(user);
+		const items = await productRepo.getAllByUser({
+			userIdParent: user.parentId,
+		});
 
 		return c.json(items);
 	})
