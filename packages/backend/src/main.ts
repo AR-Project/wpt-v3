@@ -34,7 +34,7 @@ export const app = new Hono()
 	// Transactional Data
 	.route("/purchase-order", purchaseOrderRoute)
 
-	// TODO: "/restock-order" endpont (formerly "plan")
+	// TODO: "/estimate-order" endpont (formerly "plan")
 
 	// Other
 	.get("/hello", async (c) => c.json({ message: "hello from api" }))
