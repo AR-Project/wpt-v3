@@ -12,6 +12,7 @@ import { app } from "@/main";
 import type { ImageDBRecord } from "@/db/schema";
 import { authTableHelper } from "@/db/_testHelper/authDbHelper";
 import * as imageTbHelper from "@db/_testHelper/image.tableHelper";
+import { categoryTbHelper } from "@db/_testHelper/categoryDbHelper";
 import { resolveFromRoot } from "@/lib/utils/file";
 
 import { signUpSignInHelper } from "../auth/auth.routes.test.helper";
@@ -37,6 +38,7 @@ describe("image route", () => {
 
 	afterAll(async () => {
 		await imageTbHelper.clean({ userId: currentUserId });
+		await categoryTbHelper.clean({ userId: currentUserId });
 		await authTableHelper.clean({ userId: currentUserId });
 	});
 

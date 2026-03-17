@@ -15,6 +15,7 @@ import {
 } from "../auth/auth.routes.test.helper";
 
 import * as vendorTbHelper from "@db/_testHelper/vendor.tableHelper";
+import { categoryTbHelper } from "@/db/_testHelper/categoryDbHelper";
 
 describe("vendor route", () => {
 	let currentUserId: string = "";
@@ -36,6 +37,8 @@ describe("vendor route", () => {
 
 	afterAll(async () => {
 		await vendorTbHelper.clean({ userId: currentUserId });
+		await categoryTbHelper.clean({ userId: currentUserId });
+
 		await authTableHelper.clean({ userId: currentUserId });
 	});
 	describe("GET", () => {
@@ -186,6 +189,7 @@ describe("vendor route", () => {
 			expect(json.message).toBe("user not allowed");
 
 			await vendorTbHelper.clean({ vendorId: "vendor_mock-user-delete" });
+			await categoryTbHelper.clean({ userId: mockUser.user.id });
 			await authTableHelper.clean({ userId: mockUser.user.id });
 		});
 	});
