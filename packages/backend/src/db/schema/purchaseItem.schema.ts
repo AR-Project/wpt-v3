@@ -4,7 +4,6 @@ import { index, sqliteTable } from "drizzle-orm/sqlite-core";
 import { user } from "./auth.schema";
 import { relations } from "drizzle-orm";
 import { purchaseOrder } from "./purchaseOrder.schema";
-import { vendor } from "./vendor.schema";
 import { product } from "./product.schema";
 
 export type PurchaseItemDbInsert = typeof purchaseItem.$inferInsert;
@@ -31,12 +30,6 @@ export const purchaseItem = sqliteTable(
 			.references(() => purchaseOrder.id, {
 				onDelete: "cascade",
 			}),
-
-		// TO DELETE: duplicate information - Purchase Order already have vendor ID
-		vendorId: t
-			.text("vendor_id")
-			.notNull()
-			.references(() => vendor.id),
 
 		// From User
 		productId: t
@@ -76,10 +69,10 @@ export const purchaseItemRelations = relations(purchaseItem, ({ one }) => ({
 		references: [user.id],
 		relationName: "creator",
 	}),
-	vendor: one(vendor, {
-		fields: [purchaseItem.vendorId],
-		references: [vendor.id],
-	}),
+	// vendor: one(vendor, {
+	// 	fields: [purchaseItem.vendorId],
+	// 	references: [vendor.id],
+	// }),
 	purchaseOrder: one(purchaseOrder, {
 		fields: [purchaseItem.purchaseOrderId],
 		references: [purchaseOrder.id],
