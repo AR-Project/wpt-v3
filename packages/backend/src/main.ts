@@ -11,6 +11,7 @@ import { productRoute } from "@/module/product/product.routes";
 import { vendorRoute } from "@/module/vendor/vendor.routes";
 import { purchaseOrderRoute } from "@/module/purchase-order/purchase-order.route";
 import { imageRoute } from "@/module/image/image.route";
+import { purchasePlanRoute } from "./module/purchase-plan/purchase-plan.routes";
 
 const conditionalLogger = () => {
 	return process.env.NODE_ENV === "test"
@@ -33,8 +34,7 @@ export const app = new Hono()
 
 	// Transactional Data
 	.route("/purchase-order", purchaseOrderRoute)
-
-	// TODO: "/estimate-order" endpont (formerly "plan")
+	.route("/purchase-plan", purchasePlanRoute)
 
 	// Other
 	.get("/hello", async (c) => c.json({ message: "hello from api" }))

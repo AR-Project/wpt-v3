@@ -5,3 +5,5 @@ export * from "@db/schema/vendor.schema";
 export * from "@db/schema/purchaseOrder.schema";
 export * from "@db/schema/purchaseItem.schema";
 export * from "@db/schema/image.schema";
+export * from "@db/schema/purchasePlan.schema";
+export * from "@db/schema/purchasePlanItem.schema";
