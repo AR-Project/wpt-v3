@@ -4,9 +4,12 @@
   "type": "module",
   "private": true,
   "exports": {
-    ".": "./src/main.ts",
-    "./shared": "./src/shared.ts"
+    "./shared": {
+      "types": "./dist-types/shared.d.ts",
+      "import": "./src/shared.ts"
+    }
   },
+  "types": "./dist-types/shared.d.ts",
   "devDependencies": {
     "@types/bun": "^1.3.8",
     "drizzle-kit": "^0.31.8"
@@ -21,7 +24,9 @@
     "db:push": "drizzle-kit push",
     "db:push:test": "bun --env-file=.env.test.local -- drizzle-kit push",
     "db:inspect": "drizzle-kit introspect",
-    "db:drop": "drizzle-kit drop"
+    "db:drop": "drizzle-kit drop",
+    "build:types": "tsc -p tsconfig.types.json",
+    "dev:types": "tsc -p tsconfig.types.json --watch"
   },
   "peerDependencies": {
     "typescript": "^5.9.3"
