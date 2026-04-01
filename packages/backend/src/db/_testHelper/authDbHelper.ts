@@ -43,4 +43,5 @@ export const authTableHelper = {
 	cleanByParentId: async (parentId: string) => {
 		await db.delete(user).where(eq(user.parentId, parentId));
 	},
+	nuke: async () => await db.delete(user),
 };

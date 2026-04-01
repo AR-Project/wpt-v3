@@ -52,3 +52,7 @@ export async function clean(option?: CleanOption) {
 
 	await db.delete(purchasePlanItem).where(or(byUser, byCategory));
 }
+
+export async function nuke() {
+	await db.delete(purchasePlanItem);
+}

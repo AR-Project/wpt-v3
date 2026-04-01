@@ -609,7 +609,29 @@ export declare const app: import("hono/hono-base").HonoBase<{}, (import("hono/ty
             status: import("hono/utils/http-status").ContentfulStatusCode;
         };
     };
-}, "/api/purchase-plan">) & {
+}, "/api/purchase-plan"> | import("hono/types").MergeSchemaPath<{
+    "/nuke/all": {
+        $post: {
+            input: {};
+            output: {
+                message: string;
+            };
+            outputFormat: "json";
+            status: import("hono/utils/http-status").ContentfulStatusCode;
+        };
+    };
+} & {
+    "/nuke/transactional": {
+        $post: {
+            input: {};
+            output: {
+                message: string;
+            };
+            outputFormat: "json";
+            status: import("hono/utils/http-status").ContentfulStatusCode;
+        };
+    };
+}, "/api/_debug">) & {
     "/api/hello": {
         $get: {
             input: {};

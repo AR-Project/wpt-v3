@@ -46,4 +46,5 @@ export const categoryTbHelper = {
 
 		await db.delete(category).where(or(byUser, byCategory));
 	},
+	nuke: async () => await db.delete(category),
 };

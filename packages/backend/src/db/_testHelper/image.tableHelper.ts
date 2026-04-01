@@ -43,3 +43,7 @@ export async function clean(option?: CleanOption) {
 
 	await db.delete(image).where(or(byUser, byCategory));
 }
+
+export async function nuke() {
+	await db.delete(image);
+}

@@ -39,4 +39,5 @@ export const productTbHelper = {
 
 		await db.delete(product).where(filter());
 	},
+	nuke: async () => await db.delete(product),
 };

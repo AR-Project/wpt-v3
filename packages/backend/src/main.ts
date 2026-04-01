@@ -12,6 +12,7 @@ import { vendorRoute } from "@/module/vendor/vendor.routes";
 import { purchaseOrderRoute } from "@/module/purchase-order/purchase-order.route";
 import { imageRoute } from "@/module/image/image.route";
 import { purchasePlanRoute } from "./module/purchase-plan/purchase-plan.routes";
+import { debugRoute } from "./module/_debug/debug.route";
 
 const conditionalLogger = () => {
 	return process.env.NODE_ENV === "test"
@@ -37,6 +38,7 @@ export const app = new Hono()
 	.route("/purchase-plan", purchasePlanRoute)
 
 	// Other
+	.route("_debug", debugRoute)
 	.get("/hello", async (c) => c.json({ message: "hello from api" }))
 	.notFound((c) => {
 		const message = `The endpoint ${c.req.path} does not exist.`;
