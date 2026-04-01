@@ -16,8 +16,9 @@
   "scripts": {
     "be": "cd ./packages/backend && bun run dev",
     "be:test": "cd ./packages/backend && bun run test:c",
+    "be:types": "cd ./packages/backend && bun run dev:types",
     "fe": "cd ./packages/frontend && bun run dev",
-    "dev": "bun-tasks be ::: fe"
+    "dev": "bun-tasks be ::: be:types ::: fe"
   },
   "dependencies": {
     "better-auth": "^1.4.18",
