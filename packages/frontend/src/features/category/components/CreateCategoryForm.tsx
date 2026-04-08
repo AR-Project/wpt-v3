@@ -1,14 +1,13 @@
 import { useForm } from "@tanstack/react-form"
-import { createCategorySchema } from "@wpt/backend/shared"
+import { categorySchema } from "@wpt/backend/shared"
 import { useCreateCategory } from "../api/hooks"
 import type { SubmitEventHandler } from "react"
-
 
 export default function CreateCategoryForm() {
   const { mutate, isPending } = useCreateCategory()
   const form = useForm({
     defaultValues: { name: "" },
-    validators: { onSubmit: createCategorySchema },
+    validators: { onSubmit: categorySchema.create },
     onSubmit: ({ value }) => {
       mutate(value)
       form.reset()
