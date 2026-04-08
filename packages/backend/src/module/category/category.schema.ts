@@ -1,13 +1,13 @@
 import { z } from "zod";
 
-export const createCategorySchema = z.object({
+export const create = z.object({
 	name: z.string().min(3),
 	productId: z.string().optional(),
 });
-export type CreateCategoryPayload = z.infer<typeof createCategorySchema>;
+export type CreateCategoryPayload = z.infer<typeof create>;
 
-export const updateCategorySchema = z.object({
+export const update = z.object({
 	id: z.string().min(10),
 	name: z.string().min(3),
 });
-export type UpdateCategoryPayload = z.infer<typeof updateCategorySchema>;
+export type UpdateCategoryPayload = z.infer<typeof update>;

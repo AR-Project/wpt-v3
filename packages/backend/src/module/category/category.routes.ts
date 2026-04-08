@@ -11,10 +11,7 @@ import {
 	type CreateCategoryDbPayload,
 } from "@/db/schema/category.schema";
 import { generateId } from "@/lib/idGenerator";
-import {
-	createCategorySchema,
-	updateCategorySchema,
-} from "@module/category/category.schema";
+import * as categorySchema from "@module/category/category.schema";
 import { zValidator } from "@/lib/validator-wrapper";
 import { product } from "@/db/schema";
 
@@ -35,7 +32,7 @@ export const categoryRoute = new Hono<{ Variables: ProtectedType }>({
 		});
 		return c.json(categories);
 	})
-	.post("/", zValidator("json", createCategorySchema), async (c) => {
+	.post("/", zValidator("json", categorySchema.create), async (c) => {
 		const { name, productId } = c.req.valid("json");
 		const user = c.get("user");
 
@@ -111,7 +108,7 @@ export const categoryRoute = new Hono<{ Variables: ProtectedType }>({
 			return c.json({}, 200);
 		},
 	)
-	.patch("/", zValidator("json", updateCategorySchema), async (c) => {
+	.patch("/", zValidator("json", categorySchema.update), async (c) => {
 		const payload = c.req.valid("json");
 		const user = c.get("user");
 
