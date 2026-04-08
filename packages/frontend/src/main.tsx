@@ -46,10 +46,7 @@ function App() {
     isLoading: false
   }
 
-  return <>
-    <div className='text-xs font-mono'>{JSON.stringify(auth, null, 2)}</div>
-    <RouterProvider router={router} context={{ auth }} />
-  </>
+  return <RouterProvider router={router} context={{ auth }} />
 }
 
 // Render the app
